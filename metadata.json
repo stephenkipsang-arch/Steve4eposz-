@@ -1,0 +1,6 @@
+{
+  "name": "MFA-VEXPEX",
+  "description": "The official exclusive social network and community hub for M-PESA Foundation Academy students, staff, and alumni.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
