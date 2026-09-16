@@ -48,14 +48,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => { active = false; window.clearInterval(timer); };
   }, []);
 
-  // Make the currently active account discoverable to other logged-in devices.
+  // Publish presence so other devices can show who is active.
   useEffect(() => {
+    const setPresence = (online: boolean) => {
+      void fetch(`/api/users/${encodeURIComponent(currentUser.id)}/presence`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ online })
+      }).catch(() => undefined);
+    };
+
     void fetch('/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(currentUser)
     }).catch(() => undefined);
-  }, [currentUser]);
+
+    setPresence(true);
+    const heartbeat = window.setInterval(() => setPresence(true), 15000);
+    const handleVisibility = () => setPresence(document.visibilityState === 'visible');
+    const handleBeforeUnload = () => setPresence(false);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.clearInterval(heartbeat);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      setPresence(false);
+    };
+  }, [currentUser.id]);
 
   const isDomainValid = (email: string): boolean => email.trim().toLowerCase().endsWith('@mpesafoundationacademy.ac.ke');
 

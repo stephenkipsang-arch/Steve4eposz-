@@ -43,23 +43,49 @@ app.post('/api/users', (req, res) => {
 
   const db = loadDb();
   const normalizedEmail = String(user.email).trim().toLowerCase();
-  const existing = db.users.find((u) => String(u.email).toLowerCase() === normalizedEmail);
+  const existingIndex = db.users.findIndex((u) => String(u.email).toLowerCase() === normalizedEmail);
+  const now = new Date().toISOString();
+  const cleanUser = { ...user, email: normalizedEmail, lastSeen: now, online: true };
 
-  if (existing) return res.json({ user: existing });
+  if (existingIndex >= 0) {
+    db.users[existingIndex] = { ...db.users[existingIndex], ...cleanUser };
+    saveDb(db);
+    return res.json({ user: db.users[existingIndex] });
+  }
 
-  const cleanUser = { ...user, email: normalizedEmail };
   db.users.push(cleanUser);
   saveDb(db);
   return res.status(201).json({ user: cleanUser });
 });
 
+app.patch('/api/users/:userId/presence', (req, res) => {
+  const db = loadDb();
+  const index = db.users.findIndex((u) => String(u.id) === String(req.params.userId));
+  if (index < 0) return res.status(404).json({ error: 'User not found' });
+
+  const online = req.body?.online !== false;
+  db.users[index] = {
+    ...db.users[index],
+    online,
+    lastSeen: new Date().toISOString()
+  };
+  saveDb(db);
+  res.json({ user: db.users[index] });
+});
+
 app.get('/api/messages', (req, res) => {
-  const { userId, peerId } = req.query;
+  const { userId, peerId, since } = req.query;
   if (!userId || !peerId) return res.status(400).json({ error: 'userId and peerId are required' });
 
   const db = loadDb();
   const key = threadKey(userId, peerId);
-  const messages = db.messages.filter((m) => m.threadKey === key);
+  let messages = db.messages.filter((m) => m.threadKey === key);
+  if (since) {
+    const sinceTime = new Date(String(since)).getTime();
+    if (!Number.isNaN(sinceTime)) {
+      messages = messages.filter((m) => new Date(m.timestamp).getTime() > sinceTime);
+    }
+  }
   res.json({ messages });
 });
 
@@ -84,6 +110,34 @@ app.post('/api/messages', (req, res) => {
   db.messages.push(message);
   saveDb(db);
   res.status(201).json({ message });
+});
+
+app.patch('/api/messages/:messageId/read', (req, res) => {
+  const db = loadDb();
+  const index = db.messages.findIndex((m) => m.id === req.params.messageId);
+  if (index < 0) return res.status(404).json({ error: 'Message not found' });
+
+  db.messages[index] = { ...db.messages[index], read: true };
+  saveDb(db);
+  res.json({ message: db.messages[index] });
+});
+
+app.patch('/api/messages/read', (req, res) => {
+  const { userId, peerId } = req.body || {};
+  if (!userId || !peerId) return res.status(400).json({ error: 'userId and peerId are required' });
+
+  const db = loadDb();
+  const key = threadKey(userId, peerId);
+  let changed = 0;
+  db.messages = db.messages.map((message) => {
+    if (message.threadKey === key && message.receiverId === String(userId) && !message.read) {
+      changed += 1;
+      return { ...message, read: true };
+    }
+    return message;
+  });
+  saveDb(db);
+  res.json({ ok: true, changed });
 });
 
 const distPath = path.join(__dirname, 'dist');
