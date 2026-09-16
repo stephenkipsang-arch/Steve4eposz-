@@ -1,4 +1,4 @@
-import { Message } from '../types';
+import { Message, User } from '../types';
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
@@ -19,6 +19,19 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export async function fetchAcademyUsers() {
+  const result = await request<{ users: User[] }>('/api/users');
+  return result.users;
+}
+
+export async function upsertAcademyUser(user: User) {
+  const result = await request<{ user: User }>('/api/users', {
+    method: 'POST',
+    body: JSON.stringify(user)
+  });
+  return result.user;
+}
+
 export async function fetchConversation(userId: string, peerId: string, since?: string) {
   const params = new URLSearchParams({ userId, peerId });
   if (since) params.set('since', since);
@@ -26,12 +39,7 @@ export async function fetchConversation(userId: string, peerId: string, since?: 
   return result.messages;
 }
 
-export async function createMessage(
-  senderId: string,
-  receiverId: string,
-  text: string,
-  imageUrl?: string
-) {
+export async function createMessage(senderId: string, receiverId: string, text: string, imageUrl?: string) {
   const result = await request<{ message: Message }>('/api/messages', {
     method: 'POST',
     body: JSON.stringify({ senderId, receiverId, text, imageUrl })
@@ -47,9 +55,7 @@ export async function markConversationRead(userId: string, peerId: string) {
 }
 
 export async function markMessageRead(messageId: string) {
-  return request<{ message: Message }>(`/api/messages/${encodeURIComponent(messageId)}/read`, {
-    method: 'PATCH'
-  });
+  return request<{ message: Message }>(`/api/messages/${encodeURIComponent(messageId)}/read`, { method: 'PATCH' });
 }
 
 export async function sendPresence(userId: string, online = true) {
