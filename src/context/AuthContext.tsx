@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => setStoredItem(LOCAL_STORAGE_USER_KEY, currentUser), [currentUser]);
   useEffect(() => setStoredItem(LOCAL_STORAGE_ALL_USERS_KEY, allAcademyUsers), [allAcademyUsers]);
 
-  // Sync the directory with the shared server so accounts created on another device appear here.
+  // Keep the directory shared across devices.
   useEffect(() => {
     let active = true;
     const syncUsers = async () => {
@@ -40,13 +40,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return Array.from(merged.values());
         });
       } catch {
-        // Keep cached users when the server is unavailable.
+        // Cached users remain available offline.
       }
     };
     syncUsers();
     const timer = window.setInterval(syncUsers, 5000);
     return () => { active = false; window.clearInterval(timer); };
   }, []);
+
+  // Make the currently active account discoverable to other logged-in devices.
+  useEffect(() => {
+    void fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentUser)
+    }).catch(() => undefined);
+  }, [currentUser]);
 
   const isDomainValid = (email: string): boolean => email.trim().toLowerCase().endsWith('@mpesafoundationacademy.ac.ke');
 
@@ -88,13 +97,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setAllAcademyUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
-
-    void fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newUser)
-    }).catch(() => undefined);
-
     return { success: true, message: `Account created for ${userName}! Verified with M-PESA Foundation Academy.` };
   };
 
@@ -107,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser((prev) => {
       const updated = { ...prev, ...updatedFields };
       setAllAcademyUsers((all) => all.map((u) => (u.id === prev.id ? updated : u)));
-      void fetch('/api/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated) }).catch(() => undefined);
       return updated;
     });
   };
