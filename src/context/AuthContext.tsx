@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, House, UserRole } from '../types';
 import { CURRENT_USER, ACADEMY_USERS } from '../data/mockData';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
+import { apiFetch } from '../utils/api';
 
 interface AuthContextType {
   currentUser: User;
@@ -25,12 +26,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => setStoredItem(LOCAL_STORAGE_USER_KEY, currentUser), [currentUser]);
   useEffect(() => setStoredItem(LOCAL_STORAGE_ALL_USERS_KEY, allAcademyUsers), [allAcademyUsers]);
 
-  // Keep the directory shared across devices.
+  // Shared directory sync. The app keeps cached users if the backend is temporarily unavailable.
   useEffect(() => {
     let active = true;
     const syncUsers = async () => {
       try {
-        const response = await fetch('/api/users');
+        const response = await apiFetch('/api/users');
         if (!response.ok) return;
         const data = await response.json();
         if (!active || !Array.isArray(data.users)) return;
@@ -43,22 +44,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Cached users remain available offline.
       }
     };
-    syncUsers();
-    const timer = window.setInterval(syncUsers, 5000);
+    void syncUsers();
+    const timer = window.setInterval(() => void syncUsers(), 5000);
     return () => { active = false; window.clearInterval(timer); };
   }, []);
 
-  // Publish presence so other devices can show who is active.
+  // Publish presence so other devices can see active students.
   useEffect(() => {
     const setPresence = (online: boolean) => {
-      void fetch(`/api/users/${encodeURIComponent(currentUser.id)}/presence`, {
+      void apiFetch(`/api/users/${encodeURIComponent(currentUser.id)}/presence`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ online })
       }).catch(() => undefined);
     };
 
-    void fetch('/api/users', {
+    void apiFetch('/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(currentUser)
