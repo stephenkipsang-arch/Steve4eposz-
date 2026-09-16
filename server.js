@@ -8,6 +8,14 @@ const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const DB_FILE = path.join(__dirname, 'mfa-data.json');
 
+app.use((req, res, next) => {
+  const allowedOrigin = process.env.FRONTEND_ORIGIN || '*';
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 app.use(express.json({ limit: '1mb' }));
 
 function loadDb() {
@@ -26,13 +34,19 @@ function threadKey(a, b) {
   return [String(a), String(b)].sort().join('__');
 }
 
+function withFreshPresence(user) {
+  const lastSeen = user.lastSeen ? new Date(user.lastSeen).getTime() : 0;
+  const online = Boolean(user.online) && Date.now() - lastSeen < 45000;
+  return { ...user, online };
+}
+
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'mfa-vexpex' });
+  res.json({ ok: true, service: 'mfa-vexpex', time: new Date().toISOString() });
 });
 
 app.get('/api/users', (_req, res) => {
   const db = loadDb();
-  res.json({ users: db.users });
+  res.json({ users: db.users.map(withFreshPresence) });
 });
 
 app.post('/api/users', (req, res) => {
@@ -41,16 +55,20 @@ app.post('/api/users', (req, res) => {
     return res.status(400).json({ error: 'id, email and name are required' });
   }
 
+  const email = String(user.email).trim().toLowerCase();
+  if (!email.endsWith('@mpesafoundationacademy.ac.ke')) {
+    return res.status(403).json({ error: 'Academy email required' });
+  }
+
   const db = loadDb();
-  const normalizedEmail = String(user.email).trim().toLowerCase();
-  const existingIndex = db.users.findIndex((u) => String(u.email).toLowerCase() === normalizedEmail);
+  const existingIndex = db.users.findIndex((u) => String(u.email).toLowerCase() === email);
   const now = new Date().toISOString();
-  const cleanUser = { ...user, email: normalizedEmail, lastSeen: now, online: true };
+  const cleanUser = { ...user, email, lastSeen: now, online: true };
 
   if (existingIndex >= 0) {
     db.users[existingIndex] = { ...db.users[existingIndex], ...cleanUser };
     saveDb(db);
-    return res.json({ user: db.users[existingIndex] });
+    return res.json({ user: withFreshPresence(db.users[existingIndex]) });
   }
 
   db.users.push(cleanUser);
@@ -70,7 +88,7 @@ app.patch('/api/users/:userId/presence', (req, res) => {
     lastSeen: new Date().toISOString()
   };
   saveDb(db);
-  res.json({ user: db.users[index] });
+  res.json({ user: withFreshPresence(db.users[index]) });
 });
 
 app.get('/api/messages', (req, res) => {
@@ -82,9 +100,7 @@ app.get('/api/messages', (req, res) => {
   let messages = db.messages.filter((m) => m.threadKey === key);
   if (since) {
     const sinceTime = new Date(String(since)).getTime();
-    if (!Number.isNaN(sinceTime)) {
-      messages = messages.filter((m) => new Date(m.timestamp).getTime() > sinceTime);
-    }
+    if (!Number.isNaN(sinceTime)) messages = messages.filter((m) => new Date(m.timestamp).getTime() > sinceTime);
   }
   res.json({ messages });
 });
@@ -93,6 +109,9 @@ app.post('/api/messages', (req, res) => {
   const { senderId, receiverId, text, imageUrl } = req.body;
   if (!senderId || !receiverId || (!String(text || '').trim() && !imageUrl)) {
     return res.status(400).json({ error: 'senderId, receiverId and message content are required' });
+  }
+  if (String(senderId) === String(receiverId)) {
+    return res.status(400).json({ error: 'Cannot message yourself' });
   }
 
   const db = loadDb();
