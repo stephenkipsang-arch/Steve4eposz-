@@ -122,6 +122,15 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const normalizeGrade10User = (candidate: User): User => ({
+  ...candidate,
+  role: 'Student - Grade 10',
+  gradeOrDept: 'Grade 10',
+  graduationYear: '2028',
+  bio: candidate.bio && candidate.bio.includes('IB') ? 'Grade 10 learner | M-PESA Foundation Academy' : candidate.bio,
+  house: 'Kenya'
+});
+
 const resolveStoredUser = (candidate: unknown): User => {
   if (candidate && typeof candidate === 'object') {
     const value = candidate as Partial<User>;
@@ -130,7 +139,7 @@ const resolveStoredUser = (candidate: unknown): User => {
       : undefined;
 
     if (knownUser && (!value.avatar || typeof value.avatar !== 'string')) {
-      return knownUser;
+      return normalizeGrade10User(knownUser);
     }
 
     if (
@@ -139,13 +148,13 @@ const resolveStoredUser = (candidate: unknown): User => {
       typeof value.avatar === 'string' &&
       typeof value.house === 'string'
     ) {
-      return value as User;
+      return normalizeGrade10User(value as User);
     }
 
-    if (knownUser) return knownUser;
+    if (knownUser) return normalizeGrade10User(knownUser);
   }
 
-  return CURRENT_USER;
+  return normalizeGrade10User(CURRENT_USER);
 };
 
 const normalizeStoredPosts = (value: unknown): Post[] => {
@@ -220,7 +229,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Reels & Shorts State
   const [reels, setReels] = useState<Reel[]>(() => {
-    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v6', []);
+    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v7', []);
     return normalizeStoredReels(storedReels);
   });
   const [activeReelIndex, setActiveReelIndex] = useState<number>(0);
@@ -272,7 +281,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [marketplaceItems]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_reels_v6', reels);
+    setStoredItem('mfa_vexpex_reels_v7', reels);
   }, [reels]);
 
   const viewUserProfile = (user: User) => {
