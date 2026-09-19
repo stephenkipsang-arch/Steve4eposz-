@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import { ACADEMY_USERS, HOUSES_DATA } from '../../data/mockData';
+import { HOUSES_DATA } from '../../data/mockData';
 
 export const RightSidebar: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, allAcademyUsers } = useAuth();
   const { openChatWithUser, setActiveTab, setSelectedHouse, posts } = useApp();
 
-  const otherUsers = ACADEMY_USERS.filter((u) => u.id !== currentUser.id);
+  const otherUsers = allAcademyUsers.filter((u) => u.id !== currentUser.id);
 
   return (
     <aside aria-label="Campus Activity & Contacts" className="w-64 xl:w-80 h-[calc(100vh-3.5rem)] sticky top-14 overflow-y-auto px-2 py-3 hidden lg:flex flex-col gap-4 shrink-0 scrollbar-thin select-none">
@@ -111,27 +111,13 @@ export const RightSidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Birthdays & Academic Milestones */}
+      {/* Campus milestones stay empty until real academy events are created. */}
       <div className="border-t border-[#CED0D4] pt-2">
         <div className="text-[11px] font-bold text-[#65676B] uppercase tracking-wider mb-2 px-1">
           Campus Milestones
         </div>
-        <div className="flex items-start gap-2.5 p-2 rounded-xl bg-white border border-[#CED0D4] shadow-xs">
-          <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
-            <Cake className="w-4 h-4" />
-          </div>
-          <div className="text-xs text-[#050505] leading-snug">
-            <span className="font-bold">David Otieno </span>
-            celebrates his birthday today in <span className="font-bold text-[#DC2626]">Kenya House</span>!
-            <div className="mt-1">
-              <button
-                onClick={() => openChatWithUser(ACADEMY_USERS[2])}
-                className="text-[11px] text-[#1877F2] font-semibold hover:underline"
-              >
-                Send birthday greeting in Messenger →
-              </button>
-            </div>
-          </div>
+        <div className="p-3 rounded-xl bg-white border border-[#CED0D4] shadow-xs text-xs text-[#65676B]">
+          No campus milestones yet.
         </div>
       </div>
 
