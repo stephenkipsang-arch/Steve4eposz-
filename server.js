@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const DB_FILE = path.join(__dirname, 'mfa-data.json');
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const sessions = new Map();
 const loginAttempts = new Map();
@@ -401,9 +401,12 @@ app.post('/api/lost-found', (req, res) => {
 
 app.patch('/api/lost-found/:itemId', (req, res) => {
   const db = loadDb();
+  const current = requireAuth(req, res, db);
+  if (!current) return;
+
   const index = (db.lostFound || []).findIndex((item) => item.id === req.params.itemId);
   if (index < 0) return res.status(404).json({ error: 'Lost & found entry not found' });
-  if (String(db.lostFound[index].reporterId) !== String(req.body?.reporterId)) {
+  if (String(current.id) !== String(db.lostFound[index].reporterId)) {
     return res.status(403).json({ error: 'Only the person who posted this entry can update it' });
   }
   db.lostFound[index] = { ...db.lostFound[index], resolved: Boolean(req.body?.resolved) };
@@ -441,7 +444,6 @@ app.post('/api/messages', (req, res) => {
     return res.status(400).json({ error: 'Cannot message yourself' });
   }
 
-  const db = loadDb();
   const message = {
     id: `server_msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     senderId: String(senderId),
@@ -460,9 +462,13 @@ app.post('/api/messages', (req, res) => {
 
 app.patch('/api/messages/:messageId/read', (req, res) => {
   const db = loadDb();
+  const current = requireAuth(req, res, db);
+  if (!current) return;
+
   const index = db.messages.findIndex((m) => m.id === req.params.messageId);
   if (index < 0) return res.status(404).json({ error: 'Message not found' });
 
+  if (String(db.messages[index].receiverId) !== String(current.id)) return res.status(403).json({ error: 'Only the recipient can mark this message read.' });
   db.messages[index] = { ...db.messages[index], read: true };
   saveDb(db);
   res.json({ message: db.messages[index] });
@@ -473,6 +479,9 @@ app.patch('/api/messages/read', (req, res) => {
   if (!userId || !peerId) return res.status(400).json({ error: 'userId and peerId are required' });
 
   const db = loadDb();
+  const current = requireAuth(req, res, db);
+  if (!current) return;
+  if (String(current.id) !== String(userId)) return res.status(403).json({ error: 'User does not match the authenticated account.' });
   const key = threadKey(userId, peerId);
   let changed = 0;
   db.messages = db.messages.map((message) => {
