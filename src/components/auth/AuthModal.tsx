@@ -43,11 +43,6 @@ export const AuthModal: React.FC = () => {
     }
   };
 
-  const handleQuickSwitch = (userId: string) => {
-    switchUser(userId);
-    setIsAuthModalOpen(false);
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 select-none">
       <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#CED0D4] max-h-[95vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
