@@ -30,7 +30,7 @@ type ArenaStats = {
 };
 
 type ArenaQuestion = {
-  topic: 'Mathematics' | 'Physics' | 'Chemistry' | 'Biology';
+  topic: string;
   level: 'Foundation' | 'Practice' | 'Challenge';
   q: string;
   options: string[];
@@ -183,7 +183,7 @@ const extraQuestions: ArenaQuestion[] = [
 ];
 
 const allQuestions = [...questions, ...extraQuestions];
-const topics = Array.from(new Set(allQuestions.map((q) => q.topic))) as ArenaQuestion['topic'][];
+const topics = Array.from(new Set(allQuestions.map((q) => q.topic)));
 
 const getNextSaturday = () => {
   const now = new Date();
@@ -218,7 +218,7 @@ const getBadgeList = (stats: ArenaStats) => [
 ];
 
 export const ArenaAI: React.FC = () => {
-  const [topic, setTopic] = useState<(typeof topics)[number]>('Mathematics');
+  const [topic, setTopic] = useState<string>('Mathematics');
   const [answer, setAnswer] = useState('');
   const [checked, setChecked] = useState(false);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -243,7 +243,7 @@ export const ArenaAI: React.FC = () => {
     return () => window.clearInterval(timer);
   }, [nextCompetition]);
 
-  const resetQuestion = (nextTopic: (typeof topics)[number]) => {
+  const resetQuestion = (nextTopic: string) => {
     setTopic(nextTopic);
     setQuestionIndex(0);
     setAnswer('');
