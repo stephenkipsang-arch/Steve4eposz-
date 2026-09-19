@@ -172,6 +172,19 @@ export interface ChatThread {
   isOnline: boolean;
 }
 
+export interface LostFoundItem {
+  id: string;
+  kind: 'lost' | 'found';
+  item: string;
+  details: string;
+  location: string;
+  reporterId: string;
+  reporterName: string;
+  reporterAvatar: string;
+  timestamp: string;
+  resolved?: boolean;
+}
+
 export interface NotificationItem {
   id: string;
   actor: User;
