@@ -40,7 +40,10 @@ export const RightSidebar: React.FC = () => {
               <button key={user.id} onClick={() => openChatWithUser(user)} className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-[#F0F2F5] text-left">
                 <div className="relative">
                   <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full object-cover border border-[#D4AF37]" />
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#31A24C] border-2 border-white" />
+                  <span
+  className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${user.online ? 'bg-[#31A24C]' : 'bg-[#94A3B8]'}`}
+  title={user.online ? 'Online now' : 'Offline'}
+/>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-xs truncate flex items-center gap-1">
