@@ -293,6 +293,16 @@ export const Navbar: React.FC = () => {
         </button>
 
         <button
+          id="nav-tab-lost-found"
+          onClick={() => setActiveTab('lost-found')}
+          className={`relative flex items-center justify-center flex-1 max-w-24 h-full rounded-lg transition-colors cursor-pointer group ${activeTab === 'lost-found' ? 'text-[#8A6800]' : 'text-[#65676B] hover:bg-[#F2F2F2]'}`}
+          title="Lost & Found"
+        >
+          <Search className={`w-6 h-6 ${activeTab === 'lost-found' ? 'stroke-[2.5]' : ''}`} />
+          {activeTab === 'lost-found' && <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#D4AF37] rounded-t-md" />}
+        </button>
+
+        <button
           id="nav-tab-marketplace"
           onClick={() => setActiveTab('marketplace')}
           className={`relative flex items-center justify-center flex-1 max-w-24 h-full rounded-lg transition-colors cursor-pointer group ${
