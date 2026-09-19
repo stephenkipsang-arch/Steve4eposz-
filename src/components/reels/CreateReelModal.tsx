@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import { House } from '../../types';
 
 const SAMPLE_CAMPUS_FOOTAGE = [
   {
@@ -20,50 +19,50 @@ const SAMPLE_CAMPUS_FOOTAGE = [
     url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     poster: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80',
     suggestedAudio: 'Robotics Lab Beats • Tech Hub Original',
-    suggestedHouse: 'Kilimanjaro' as House,
-    tags: ['#Robotics', '#STEM', '#Kilimanjaro']
+    suggestedHouse: 'Academy' as House,
+    tags: ['#Robotics', '#STEM', '#Academy']
   },
   {
     title: 'Inter-House Rugby Sevens Match',
     url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
     poster: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&q=80',
     suggestedAudio: 'Stadium Crowds & Derby Day Chants 🏉',
-    suggestedHouse: 'Kenya' as House,
-    tags: ['#Rugby', '#KenyaHouse', '#InterHouse']
+    
+    tags: ['#Rugby', '#AcademyHouse', '#InterHouse']
   },
   {
     title: 'Symphony Strings & African Folk',
     url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     poster: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=600&q=80',
     suggestedAudio: 'MFA Symphony Orchestra - Vivaldi x Nyatiti',
-    suggestedHouse: 'Elgon' as House,
-    tags: ['#Orchestra', '#Elgon', '#ArtsGala']
+    suggestedHouse: 'Academy' as House,
+    tags: ['#Orchestra', '#Academy', '#ArtsGala']
   },
   {
     title: 'Chemistry Lab Flame Spectroscopy',
     url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     poster: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=600&q=80',
     suggestedAudio: 'Lo-Fi Study Beats • Chemistry Lab',
-    suggestedHouse: 'Kenya' as House,
-    tags: ['#IBDP', '#Chemistry', '#Science']
+    
+    tags: ['#Grade10', '#Learning']
   },
   {
     title: 'Green Academy Conservation Drive',
     url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
     poster: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80',
     suggestedAudio: 'Morning Ambience & Campus Anthem',
-    suggestedHouse: 'Longonot' as House,
-    tags: ['#Longonot', '#GreenCampus', '#VEXPEX']
+    suggestedHouse: 'Academy' as House,
+    tags: ['#Academy', '#GreenCampus', '#VEXPEX']
   }
 ];
 
 const SUGGESTED_HASHTAGS = [
-  '#IBDP',
+  '#Grade10',
   '#Robotics',
-  '#KenyaHouse',
-  '#Kilimanjaro',
-  '#Longonot',
-  '#Elgon',
+  '#AcademyHouse',
+  '#Academy',
+  '#Academy',
+  '#Academy',
   '#InterHouse',
   '#VEXPEX',
   '#RugbySevens',
@@ -71,15 +70,7 @@ const SUGGESTED_HASHTAGS = [
   '#ScienceCongress'
 ];
 
-const CAMPUS_LOCATIONS = [
-  'MFA Innovation & Robotics Lab',
-  'Main Athletics Arena & Rugby Pitch 1',
-  'Science Complex Chemistry Lab 3',
-  'Performing Arts Amphitheatre',
-  'Uongozi Leadership Centre Auditorium',
-  'Academy Library Silent Pods',
-  'Dining Hall & Quad Pavilion'
-];
+const CAMPUS_LOCATIONS = ['Academy Learning Centre','Science & Technology Lab','Academy Library','Online Learning Arena'];
 
 export const CreateReelModal: React.FC = () => {
   const { isCreateReelOpen, setIsCreateReelOpen, addReel } = useApp();
@@ -338,10 +329,10 @@ export const CreateReelModal: React.FC = () => {
                 className="w-full bg-[#242526] text-xs text-white px-3 py-2 rounded-xl border border-[#3A3B3C] focus:outline-hidden focus:border-[#1877F2] cursor-pointer"
               >
                 <option value="All Academy">🌐 All Academy</option>
-                <option value="Kenya">🦁 Kenya House</option>
-                <option value="Kilimanjaro">🏔️ Kilimanjaro House</option>
-                <option value="Longonot">🦅 Longonot House</option>
-                <option value="Elgon">🦏 Elgon House</option>
+                <option value="Academy">🦁 Academy House</option>
+                <option value="Academy">🏔️ Academy House</option>
+                <option value="Academy">🦅 Academy House</option>
+                <option value="Academy">🦏 Academy House</option>
               </select>
             </div>
 
