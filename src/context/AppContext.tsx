@@ -220,7 +220,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Reels & Shorts State
   const [reels, setReels] = useState<Reel[]>(() => {
-    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v5', []);
+    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v6', []);
     return normalizeStoredReels(storedReels);
   });
   const [activeReelIndex, setActiveReelIndex] = useState<number>(0);
@@ -272,7 +272,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [marketplaceItems]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_reels_v5', reels);
+    setStoredItem('mfa_vexpex_reels_v6', reels);
   }, [reels]);
 
   const viewUserProfile = (user: User) => {
