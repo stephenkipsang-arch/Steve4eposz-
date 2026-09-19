@@ -138,6 +138,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser((prev) => {
       const updated = { ...prev, ...updatedFields };
       setAllAcademyUsers((all) => all.map((u) => (u.id === prev.id ? updated : u)));
+      void apiFetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      }).catch(() => undefined);
       return updated;
     });
   };
