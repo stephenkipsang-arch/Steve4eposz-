@@ -120,9 +120,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       bio: `${house} House Member | M-PESA Foundation Academy`,
       location: 'Thika Campus, Kenya',
       isVerifiedAcademy: true,
-      friendsCount: 15,
+      friendsCount: 0,
       joinedDate: 'August 2026',
-      clubs: ['VEXPEX Community']
+      clubs: []
     };
 
     setAllAcademyUsers((prev) => [...prev, newUser]);
