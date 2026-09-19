@@ -127,16 +127,7 @@ export const ProfileView: React.FC = () => {
                   className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-white shadow-lg bg-white"
                 />
                 <span className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center text-sm shadow-md">
-                  {selectedProfileUser.house === 'Kenya'
-                    ? '🦁'
-                    : selectedProfileUser.house === 'Kilimanjaro'
-                    ? '🏔️'
-                    : selectedProfileUser.house === 'Longonot'
-                    ? '🦅'
-                    : selectedProfileUser.house === 'Elgon'
-                    ? '🦏'
-                    : '🏛️'}
-                </span>
+                  </span>
               </div>
 
               <div className="space-y-1">
@@ -145,10 +136,7 @@ export const ProfileView: React.FC = () => {
                   {selectedProfileUser.isVerifiedAcademy && (
                     <CheckCircle2 className="w-5 h-5 text-[#1877F2] fill-[#1877F2] text-white" />
                   )}
-                </h1>
-                <p className="text-xs font-semibold text-[#65676B]">
-                  {selectedProfileUser.house} House • {selectedProfileUser.gradeOrDept}
-                </p>
+                </h1><p className="text-xs font-semibold text-[#65676B]">Grade 10 Learner</p>
                 <div className="flex items-center justify-center sm:justify-start gap-1 text-xs text-[#1877F2] font-semibold">
                   <span>{selectedProfileUser.friendsCount} Academy Friends</span>
                 </div>
@@ -295,10 +283,8 @@ export const ProfileView: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2.5">
-                <Home className="w-4 h-4 text-[#65676B] shrink-0" />
-                <span>
-                  Affiliated with <span className="font-bold">{selectedProfileUser.house} House</span>
-                </span>
+                <GraduationCap className="w-4 h-4 text-[#65676B] shrink-0" />
+                <span>Grade 10 learner at <span className="font-bold text-[#1877F2]">M-PESA Foundation Academy</span></span>
               </div>
 
               <div className="flex items-center gap-2.5">
@@ -319,23 +305,7 @@ export const ProfileView: React.FC = () => {
               </div>
             </div>
 
-            {/* Clubs & Badges */}
-            <div className="border-t border-[#CED0D4] pt-2">
-              <div className="text-[11px] font-bold text-[#65676B] uppercase tracking-wider mb-2">
-                Clubs & Leadership
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedProfileUser.clubs.map((club, idx) => (
-                  <span
-                    key={idx}
-                    className="text-[11px] bg-[#E7F3FF] text-[#1877F2] font-semibold px-2.5 py-1 rounded-full border border-[#BEDDFF]"
-                  >
-                    ✨ {club}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+
 
           {/* Friends Preview Box */}
           <div className="bg-white rounded-2xl p-4 shadow-xs border border-[#CED0D4] space-y-3">
@@ -354,50 +324,11 @@ export const ProfileView: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {allAcademyUsers.filter((u) => u.id !== selectedProfileUser.id)
-                .slice(0, 6)
-                .map((peer) => (
-                  <div
-                    key={peer.id}
-                    onClick={() => viewUserProfile(peer)}
-                    className="cursor-pointer group"
-                  >
-                    <img
-                      src={peer.avatar}
-                      alt={peer.name}
-                      className="w-full h-20 rounded-xl object-cover border border-[#CED0D4] group-hover:opacity-90 transition-opacity"
-                    />
-                    <p className="text-[11px] font-semibold text-[#050505] truncate mt-1 group-hover:underline">
-                      {peer.name.split(' ')[0]}
-                    </p>
-                  </div>
-                ))}
+            <div className="p-5 rounded-xl bg-[#F8FAFC] border border-[#E4E6EB] text-xs text-[#65676B] text-center">
+                No campus albums yet.
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Right Column: Profile Timeline / Sub Tabs */}
-        <div className="md:col-span-7 space-y-4">
-          {activeProfileTab === 'posts' && (
-            <>
-              {isMe && (
-                <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-xs border border-[#CED0D4]">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={currentUser.avatar}
-                      alt={currentUser.name}
-                      className="w-10 h-10 rounded-full object-cover border border-[#CED0D4]"
-                    />
-                    <button
-                      onClick={() => setIsCreatePostOpen(true)}
-                      className="flex-1 bg-[#F0F2F5] hover:bg-[#E4E6EB] transition-colors rounded-full py-2 px-4 text-left text-xs text-[#65676B] font-medium"
-                    >
-                      Post to your profile timeline...
-                    </button>
-                  </div>
-                </div>
-              )}
+          )}
 
               {userPosts.length === 0 ? (
                 <div className="bg-white rounded-2xl p-8 text-center border border-[#CED0D4]">
@@ -418,7 +349,7 @@ export const ProfileView: React.FC = () => {
           {activeProfileTab === 'about' && (
             <div className="bg-white rounded-2xl p-6 shadow-xs border border-[#CED0D4] space-y-4">
               <h3 className="font-extrabold text-base text-[#050505]">
-                Academic Details & House Heritage
+                Academic Details
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div className="p-3 bg-[#F0F2F5] rounded-xl">
@@ -428,10 +359,8 @@ export const ProfileView: React.FC = () => {
                   </span>
                 </div>
                 <div className="p-3 bg-[#F0F2F5] rounded-xl">
-                  <span className="text-[#65676B] block">Assigned Dormitory House</span>
-                  <span className="font-bold text-[#1877F2] text-sm">
-                    {selectedProfileUser.house} House
-                  </span>
+                  <span className="text-[#65676B] block">Learning Level</span>
+                  <span className="font-bold text-[#050505] text-sm">Grade 10</span>
                 </div>
                 <div className="p-3 bg-[#F0F2F5] rounded-xl">
                   <span className="text-[#65676B] block">Campus Location</span>
