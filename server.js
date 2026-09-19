@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const DB_FILE = path.join(__dirname, 'mfa-data.json');
+const DB_VERSION = 2;
 
 app.use((req, res, next) => {
   const allowedOrigin = process.env.FRONTEND_ORIGIN || '*';
@@ -18,16 +19,34 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '1mb' }));
 
+function freshDb() {
+  return { version: DB_VERSION, users: [], messages: [] };
+}
+
 function loadDb() {
   try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    // One-time migration: older deployments contained demo/test accounts and messages.
+    if (db?.version !== DB_VERSION) {
+      const clean = freshDb();
+      saveDb(clean);
+      return clean;
+    }
+    return {
+      version: DB_VERSION,
+      users: Array.isArray(db.users) ? db.users : [],
+      messages: Array.isArray(db.messages) ? db.messages : []
+    };
   } catch {
-    return { users: [], messages: [] };
+    return freshDb();
   }
 }
 
 function saveDb(db) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+  fs.writeFileSync(
+    DB_FILE,
+    JSON.stringify({ version: DB_VERSION, users: db.users || [], messages: db.messages || [] }, null, 2)
+  );
 }
 
 function threadKey(a, b) {
