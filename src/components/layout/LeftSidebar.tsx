@@ -1,11 +1,11 @@
 import React from 'react';
-import { Home, Film, BrainCircuit, Store, Calendar, Bookmark, GraduationCap, UserRound, CheckCircle2 } from 'lucide-react';
+import { Home, Film, BrainCircuit, Store, Calendar, Bookmark, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 
 export const LeftSidebar: React.FC = () => {
   const { currentUser } = useAuth();
-  const { activeTab, setActiveTab, viewUserProfile, feedFilter, setFeedFilter, savedPostIds } = useApp();
+  const { activeTab, setActiveTab, viewUserProfile, setFeedFilter, savedPostIds } = useApp();
 
   const item = (tab: 'feed' | 'reels' | 'arena-ai' | 'marketplace' | 'events', label: string, icon: React.ReactNode) => (
     <button
@@ -66,4 +66,5 @@ export const LeftSidebar: React.FC = () => {
         <p className="text-[10px]">MFA-VEXPEX • Grade 10 learning network</p>
       </div>
     </aside>
-  
+  );
+};
