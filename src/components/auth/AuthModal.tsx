@@ -15,7 +15,7 @@ import { useApp } from '../../context/AppContext';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setIsAuthModalOpen } = useApp();
-  const { loginWithAcademyEmail, isAuthenticated } = useAuth();
+  const { loginWithAcademyEmail, registerWithAcademyEmail, isAuthenticated } = useAuth();
 
   const [emailInput, setEmailInput] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -31,7 +31,11 @@ export const AuthModal: React.FC = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    void loginWithAcademyEmail(emailInput, passwordInput, mode === 'signup' ? nameInput : undefined).then((res) => {
+    const submit = mode === 'signup'
+      ? registerWithAcademyEmail(emailInput, passwordInput, nameInput)
+      : loginWithAcademyEmail(emailInput, passwordInput);
+
+    void submit.then((res) => {
       if (res.success) {
         setSuccessMessage(res.message);
         setTimeout(() => {
