@@ -163,12 +163,22 @@ app.post('/api/users', (req, res) => {
   const db = loadDb();
   const existingIndex = db.users.findIndex((u) => String(u.email).toLowerCase() === email);
   const now = new Date().toISOString();
-  const cleanUser = { ...user, email, lastSeen: now, online: true };
+  // Email is the account's canonical identity. If the same email is seen
+  // again from another browser/device, never replace the existing user ID.
+  const existingUser = existingIndex >= 0 ? db.users[existingIndex] : null;
+  const cleanUser = {
+    ...(existingUser || {}),
+    ...user,
+    id: existingUser?.id || user.id,
+    email,
+    lastSeen: now,
+    online: true
+  };
 
   if (existingIndex >= 0) {
-    db.users[existingIndex] = { ...db.users[existingIndex], ...cleanUser };
+    db.users[existingIndex] = cleanUser;
     saveDb(db);
-    return res.json({ user: withFreshPresence(db.users[existingIndex]) });
+    return res.json({ user: withFreshPresence(cleanUser) });
   }
 
   db.users.push(cleanUser);
