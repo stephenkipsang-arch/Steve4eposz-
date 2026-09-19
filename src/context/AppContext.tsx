@@ -739,75 +739,116 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const sendMessage = (receiverId: string, text: string, imageUrl?: string) => {
     if (!text.trim() && !imageUrl) return;
     const threadId = `chat_${receiverId.replace('user_', '')}`;
-    const newMsg: Message = {
-      id: `msg_${Date.now()}`,
+    const optimistic: Message = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       senderId: currentUser.id,
       receiverId,
       text,
       imageUrl,
-      timestamp: 'Just now',
+      timestamp: new Date().toISOString(),
       read: true
     };
 
     setMessages((prev) => ({
       ...prev,
-      [threadId]: [...(prev[threadId] || []), newMsg]
+      [threadId]: [...(prev[threadId] || []), optimistic]
     }));
 
-    // Persist to the shared server as well as local storage.
     void apiFetch('/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        senderId: currentUser.id,
-        receiverId,
-        text,
-        imageUrl
-      })
+      body: JSON.stringify({ senderId: currentUser.id, receiverId, text, imageUrl })
+    }).then(async (response) => {
+      if (!response.ok) throw new Error('Message sync failed');
+      const data = await response.json();
+      const serverMessage = data?.message as Message | undefined;
+      if (!serverMessage) return;
+      setMessages((prev) => ({
+        ...prev,
+        [threadId]: (prev[threadId] || [])
+          .filter((message) => message.id !== optimistic.id)
+          .concat(serverMessage)
+      }));
     }).catch((error) => {
       console.warn('Could not sync message to shared server:', error);
     });
 
-    setChatThreads((prev) =>
-      prev.map((th) => {
-        if (th.user.id === receiverId) {
-          return {
-            ...th,
-            lastMessage: text,
-            lastTimestamp: 'Just now'
-          };
-        }
-        return th;
-      })
-    );
+    setChatThreads((prev) => {
+      if (prev.some((thread) => String(thread.user.id) === String(receiverId))) {
+        return prev.map((thread) =>
+          String(thread.user.id) === String(receiverId)
+            ? { ...thread, lastMessage: text || 'Media', lastTimestamp: 'Just now' }
+            : thread
+        );
+      }
+      return prev;
+    });
   };
 
-  // Pull shared messages after refresh and periodically while the chat is open.
+
+  // Pull every authenticated user's inbox, not only already-open local threads.
+  // This fixes cross-device delivery when the recipient has refreshed and has no local chat thread yet.
   useEffect(() => {
     if (!isAuthenticated || !currentUser.id) return;
 
     let cancelled = false;
 
     const syncMessages = async () => {
-      const peers = chatThreads.map((thread) => thread.user.id).filter(Boolean);
-      for (const peerId of peers) {
-        try {
-          const response = await apiFetch(`/api/messages?userId=${encodeURIComponent(currentUser.id)}&peerId=${encodeURIComponent(peerId)}`);
-          if (!response.ok) continue;
-          const data = await response.json();
-          const serverMessages = Array.isArray(data?.messages) ? data.messages : [];
-          if (cancelled || serverMessages.length === 0) continue;
+      try {
+        const [messageResponse, usersResponse] = await Promise.all([
+          apiFetch('/api/messages/inbox'),
+          apiFetch('/api/users')
+        ]);
+        if (!messageResponse.ok || !usersResponse.ok) return;
 
+        const messageData = await messageResponse.json();
+        const usersData = await usersResponse.json();
+        const serverMessages = Array.isArray(messageData?.messages) ? messageData.messages : [];
+        const directory = Array.isArray(usersData?.users) ? usersData.users : [];
+        if (cancelled) return;
+
+        const usersById = new Map(directory.map((user: User) => [String(user.id), user]));
+        const grouped: Record<string, Message[]> = {};
+
+        for (const message of serverMessages as Message[]) {
+          const peerId = String(message.senderId) === String(currentUser.id)
+            ? String(message.receiverId)
+            : String(message.senderId);
           const threadId = `chat_${peerId.replace('user_', '')}`;
-          setMessages((prev) => {
-            const existing = prev[threadId] || [];
-            const byId = new Map(existing.map((message) => [message.id, message]));
-            serverMessages.forEach((message: Message) => byId.set(message.id, message));
-            return { ...prev, [threadId]: Array.from(byId.values()) };
-          });
-        } catch (error) {
-          console.warn('Could not sync shared messages:', error);
+          grouped[threadId] = [...(grouped[threadId] || []), message];
+
+          if (!chatThreads.some((thread) => String(thread.user.id) === peerId)) {
+            const peer = usersById.get(peerId);
+            if (peer) {
+              setChatThreads((prev) =>
+                prev.some((thread) => String(thread.user.id) === peerId)
+                  ? prev
+                  : [...prev, {
+                      id: threadId,
+                      user: peer,
+                      lastMessage: message.text || 'Media',
+                      lastTimestamp: new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      unreadCount: String(message.receiverId) === String(currentUser.id) && !message.read ? 1 : 0
+                    } as ChatThread]
+              );
+            }
+          }
         }
+
+        setMessages((prev) => {
+          const next = { ...prev };
+          for (const [threadId, incoming] of Object.entries(grouped)) {
+            const existing = next[threadId] || [];
+            const byId = new Map(existing.map((message) => [message.id, message]));
+            incoming.forEach((message) => byId.set(message.id, message));
+            next[threadId] = Array.from(byId.values()).sort(
+              (x, y) => new Date(x.timestamp).getTime() - new Date(y.timestamp).getTime()
+            );
+          }
+          return next;
+        });
+      } catch (error) {
+        console.warn('Could not sync shared messages:', error);
       }
     };
 
@@ -818,7 +859,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [isAuthenticated, currentUser.id, chatThreads.length]);
+  }, [isAuthenticated, currentUser.id]);
 
   // Notifications Handlers
   const markNotificationAsRead = (id: string) => {
