@@ -29,33 +29,6 @@ export const FeedView: React.FC = () => {
 
   // Filter posts based on active filter
   const filteredPosts = posts.filter((post) => {
-    if (feedFilter === 'my_house') {
-      return post.houseTag === currentUser.house || post.author.house === currentUser.house;
-    }
-    if (feedFilter === 'academic') {
-      return (
-        post.content.toLowerCase().includes('ib') ||
-        post.content.toLowerCase().includes('dp1') ||
-        post.content.toLowerCase().includes('dp2') ||
-        post.content.toLowerCase().includes('grade 10') ||
-        post.content.toLowerCase().includes('science') ||
-        post.content.toLowerCase().includes('lab') ||
-        post.content.toLowerCase().includes('essay') ||
-        post.content.toLowerCase().includes('robotics')
-      );
-    }
-    if (feedFilter === 'leadership') {
-      return (
-        post.content.toLowerCase().includes('vexpex') ||
-        post.content.toLowerCase().includes('council') ||
-        post.content.toLowerCase().includes('townhall') ||
-        post.author.role.includes('President') ||
-        post.author.role.includes('Captain')
-      );
-    }
-    if (feedFilter === 'announcements') {
-      return post.isOfficialAnnouncement || savedPostIds.includes(post.id);
-    }
     return true;
   });
 
@@ -133,49 +106,6 @@ export const FeedView: React.FC = () => {
           🌐 All Academy
         </button>
 
-        <button
-          onClick={() => setFeedFilter('my_house')}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1 ${
-            feedFilter === 'my_house'
-              ? 'bg-[#D97706] text-white shadow-xs'
-              : 'bg-white text-[#65676B] border border-[#CED0D4] hover:bg-[#F0F2F5]'
-          }`}
-        >
-          <span>🦁 {currentUser.house} House</span>
-        </button>
-
-        <button
-          onClick={() => setFeedFilter('academic')}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
-            feedFilter === 'academic'
-              ? 'bg-[#00A884] text-white shadow-xs'
-              : 'bg-white text-[#65676B] border border-[#CED0D4] hover:bg-[#F0F2F5]'
-          }`}
-        >
-          🔬 IB & STEM
-        </button>
-
-        <button
-          onClick={() => setFeedFilter('leadership')}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
-            feedFilter === 'leadership'
-              ? 'bg-[#8B5CF6] text-white shadow-xs'
-              : 'bg-white text-[#65676B] border border-[#CED0D4] hover:bg-[#F0F2F5]'
-          }`}
-        >
-          🏛️ VEXPEX Council
-        </button>
-
-        <button
-          onClick={() => setFeedFilter('announcements')}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
-            feedFilter === 'announcements'
-              ? 'bg-[#FA383E] text-white shadow-xs'
-              : 'bg-white text-[#65676B] border border-[#CED0D4] hover:bg-[#F0F2F5]'
-          }`}
-        >
-          📢 Saved & Official
-        </button>
       </div>
 
       {/* Posts Stream */}
@@ -185,10 +115,10 @@ export const FeedView: React.FC = () => {
             <Sparkles className="w-6 h-6" />
           </div>
           <h3 className="font-bold text-sm text-[#050505] mb-1">
-            No updates in this filter yet
+            The Grade 10 feed is completely empty
           </h3>
           <p className="text-xs text-[#65676B] max-w-sm mx-auto mb-4">
-            Be the first scholar to share an update or switch to All Academy Feed.
+            Nothing has been posted yet. Start the Grade 10 learning community when you are ready.
           </p>
           <button
             onClick={() => setIsCreatePostOpen(true)}
