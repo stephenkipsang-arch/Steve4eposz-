@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { X, Clapperboard, Upload, Hash, Music, MapPin } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import { apiFetch, apiUrl } from '../../utils/api';
+const CLOUDINARY_CLOUD_NAME = 'kicn9kjt';
+const CLOUDINARY_UPLOAD_PRESET = 'mfa-reels';
 
 const LOCATIONS = ['Academy Learning Centre', 'Science & Technology Lab', 'Academy Library', 'Online Learning Arena'];
 const TAGS = ['#Grade10', '#Robotics', '#Academy', '#VEXPEX', '#ScienceCongress'];
@@ -41,25 +42,33 @@ export const CreateReelModal: React.FC = () => {
       setUploading(true);
       let finalUrl = videoUrl;
       if (file) {
-        const response = await apiFetch('/api/reels/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': file.type || 'application/octet-stream' },
-          body: file
-        });
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', 'mfa-vexpex/reels');
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`,
+          {
+            method: 'POST',
+            body: formData
+          }
+        );
+
         if (!response.ok) {
           let detail = '';
           try {
             const errorData = await response.json();
-            if (errorData?.code === 'REEL_STORAGE_NOT_CONFIGURED') {
-              detail = 'Persistent Reel storage is not configured yet on the server.';
-            } else if (errorData?.error) {
-              detail = String(errorData.error);
-            }
+            if (errorData?.error?.message) detail = String(errorData.error.message);
           } catch {}
-          throw new Error(detail || 'The Reel could not be uploaded. Please try again.');
+          throw new Error(detail || 'The Reel could not be uploaded to Cloudinary. Please try again.');
         }
+
         const data = await response.json();
-        finalUrl = apiUrl(data.url);
+        if (!data?.secure_url) {
+          throw new Error('Cloudinary did not return a video URL. Please try again.');
+        }
+        finalUrl = String(data.secure_url);
       }
       addReel(finalUrl, caption.trim() || 'Grade 10 campus short 🎥', audioTrack.trim() || `Original Audio • ${currentUser.name}`, 'All Academy', location, tags);
       (window as any).__mfaReelFile = undefined;
