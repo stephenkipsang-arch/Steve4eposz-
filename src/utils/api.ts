@@ -1,4 +1,4 @@
-const configuredApiUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+const configuredApiUrl = (import.meta.env.VITE_API_URL || 'https://mfa-vexpex.onrender.com').trim().replace(/\/$/, '');
 
 export const API_BASE_URL = configuredApiUrl;
 
