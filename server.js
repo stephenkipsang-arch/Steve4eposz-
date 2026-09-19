@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const DB_FILE = path.join(__dirname, 'mfa-data.json');
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -99,7 +99,7 @@ app.post('/api/reels/upload', express.raw({ type: ['video/*', 'application/octet
 app.use(express.json({ limit: '1mb' }));
 
 function freshDb() {
-  return { version: DB_VERSION, users: [], messages: [], lostFound: [] };
+  return { version: DB_VERSION, users: [], messages: [], lostFound: [], posts: [] };
 }
 
 function loadDb() {
@@ -115,7 +115,8 @@ function loadDb() {
       version: DB_VERSION,
       users: Array.isArray(db.users) ? db.users : [],
       messages: Array.isArray(db.messages) ? db.messages : [],
-      lostFound: Array.isArray(db.lostFound) ? db.lostFound : []
+      lostFound: Array.isArray(db.lostFound) ? db.lostFound : [],
+      posts: Array.isArray(db.posts) ? db.posts : []
     };
   } catch {
     return freshDb();
@@ -125,7 +126,7 @@ function loadDb() {
 function saveDb(db) {
   fs.writeFileSync(
     DB_FILE,
-    JSON.stringify({ version: DB_VERSION, users: db.users || [], messages: db.messages || [], lostFound: db.lostFound || [] }, null, 2)
+    JSON.stringify({ version: DB_VERSION, users: db.users || [], messages: db.messages || [], lostFound: db.lostFound || [], posts: db.posts || [] }, null, 2)
   );
 }
 
@@ -188,6 +189,39 @@ app.patch('/api/users/:userId/presence', (req, res) => {
   };
   saveDb(db);
   res.json({ user: withFreshPresence(db.users[index]) });
+});
+
+app.get('/api/posts', (_req, res) => {
+  const db = loadDb();
+  res.json({ posts: [...(db.posts || [])].sort((a, b) => {
+    const at = Date.parse(String(a.createdAt || a.timestamp || '')) || 0;
+    const bt = Date.parse(String(b.createdAt || b.timestamp || '')) || 0;
+    return bt - at;
+  }) });
+});
+
+app.post('/api/posts', (req, res) => {
+  const post = req.body;
+  if (!post?.id || !post?.author?.id || !String(post.content || '').trim()) {
+    return res.status(400).json({ error: 'id, author.id and content are required' });
+  }
+
+  const db = loadDb();
+  db.posts = Array.isArray(db.posts) ? db.posts : [];
+  const existing = db.posts.findIndex((item) => String(item.id) === String(post.id));
+  const cleanPost = {
+    ...post,
+    content: String(post.content).trim().slice(0, 5000),
+    createdAt: post.createdAt || new Date().toISOString()
+  };
+
+  if (existing >= 0) {
+    db.posts[existing] = cleanPost;
+  } else {
+    db.posts.push(cleanPost);
+  }
+  saveDb(db);
+  res.status(existing >= 0 ? 200 : 201).json({ post: cleanPost });
 });
 
 app.get('/api/lost-found', (_req, res) => {
