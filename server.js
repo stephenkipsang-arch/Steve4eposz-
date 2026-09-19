@@ -414,6 +414,22 @@ app.patch('/api/lost-found/:itemId', (req, res) => {
   res.json({ item: db.lostFound[index] });
 });
 
+app.get('/api/messages/inbox', (req, res) => {
+  const db = loadDb();
+  const current = requireAuth(req, res, db);
+  if (!current) return;
+
+  const since = req.query.since ? new Date(String(req.query.since)).getTime() : NaN;
+  let messages = db.messages.filter((m) =>
+    String(m.senderId) === String(current.id) || String(m.receiverId) === String(current.id)
+  );
+  if (!Number.isNaN(since)) {
+    messages = messages.filter((m) => new Date(m.timestamp).getTime() > since);
+  }
+  messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  res.json({ messages });
+});
+
 app.get('/api/messages', (req, res) => {
   const { userId, peerId, since } = req.query;
   if (!userId || !peerId) return res.status(400).json({ error: 'userId and peerId are required' });
