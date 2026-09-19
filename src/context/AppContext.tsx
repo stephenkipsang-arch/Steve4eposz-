@@ -17,6 +17,7 @@ import {
 import { CURRENT_USER, ACADEMY_USERS } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
+import { apiUrl } from '../utils/api';
 
 export type ActiveTab = 'feed' | 'reels' | 'arena-ai' | 'lost-found' | 'marketplace' | 'events' | 'profile' | 'saved' | 'directory';
 
@@ -174,8 +175,18 @@ const normalizeStoredReels = (value: unknown): Reel[] => {
     if (!reel || typeof reel !== 'object') return null;
 
     const item = reel as Reel;
+    const rawVideoUrl = typeof item.videoUrl === 'string' ? item.videoUrl.trim() : '';
+
+    // Object URLs are tied to the old browser session and cannot be replayed after reload.
+    if (!rawVideoUrl || rawVideoUrl.startsWith('blob:')) return null;
+
+    const videoUrl = rawVideoUrl.startsWith('/')
+      ? apiUrl(rawVideoUrl)
+      : rawVideoUrl;
+
     return {
       ...item,
+      videoUrl,
       author: resolveStoredUser(item.author),
       comments: Array.isArray(item.comments)
         ? item.comments.map((comment) => ({
