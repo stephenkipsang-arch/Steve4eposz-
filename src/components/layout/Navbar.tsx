@@ -382,7 +382,7 @@ export const Navbar: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-[#050505]">Campus Post</div>
-                  <div className="text-[11px] text-[#65676B]">Share an update with your House or Academy</div>
+                  <div className="text-[11px] text-[#65676B]">Share an update with the Grade 10 learning network</div>
                 </div>
               </button>
 
@@ -474,9 +474,14 @@ export const Navbar: React.FC = () => {
             title="Messenger"
           >
             <MessageCircle className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-[#FA383E] text-white text-[10px] font-bold">
-              2
-            </span>
+            {(() => {
+              const unreadMessages = chatThreads.reduce((total, thread) => total + thread.unreadCount, 0);
+              return unreadMessages > 0 ? (
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-[#FA383E] text-white text-[10px] font-bold">
+                  {unreadMessages > 9 ? '9+' : unreadMessages}
+                </span>
+              ) : null;
+            })()}
           </button>
 
           {isMessengerMenuOpen && (
