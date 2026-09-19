@@ -8,7 +8,7 @@ interface AuthContextType {
   currentUser: User;
   allAcademyUsers: User[];
   isAuthenticated: boolean;
-  loginWithAcademyEmail: (email: string, name?: string) => { success: boolean; message: string };
+  loginWithAcademyEmail: (email: string, name?: string) => Promise<{ success: boolean; message: string }>;
   switchUser: (userId: string) => void;
   updateProfile: (updatedFields: Partial<User>) => void;
   logout: () => void;
@@ -109,20 +109,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isDomainValid = (email: string): boolean => email.trim().toLowerCase().endsWith('@mpesafoundationacademy.ac.ke');
 
-  const loginWithAcademyEmail = (
+  const loginWithAcademyEmail = async (
     email: string,
     name?: string
-  ): { success: boolean; message: string } => {
+  ): Promise<{ success: boolean; message: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     if (!isDomainValid(cleanEmail)) {
       return { success: false, message: 'Access Denied: MFA-VEXPEX is strictly restricted to M-PESA Foundation Academy email addresses.' };
     }
 
+    try {
+      const response = await apiFetch('/api/users');
+      if (response.ok) {
+        const data = await response.json();
+        const serverUsers = Array.isArray(data?.users) ? data.users : [];
+        const existingOnServer = serverUsers.find(
+          (u: User) => String(u.email || '').trim().toLowerCase() === cleanEmail
+        );
+        if (existingOnServer) {
+          const canonicalUser = normalizeGrade10User(existingOnServer);
+          setAllAcademyUsers((local) => {
+            const cleaned = local.filter(
+              (u) => String(u.email || '').trim().toLowerCase() !== cleanEmail || u.id === canonicalUser.id
+            );
+            const merged = new Map(cleaned.map((u) => [u.id, u]));
+            merged.set(canonicalUser.id, { ...merged.get(canonicalUser.id), ...canonicalUser });
+            return Array.from(merged.values());
+          });
+          setCurrentUser(canonicalUser);
+          setIsAuthenticated(true);
+          return { success: true, message: `Welcome back, ${canonicalUser.name}!` };
+        }
+      }
+    } catch {
+      // Use local cache only if the shared account service is temporarily unavailable.
+    }
+
     const existing = allAcademyUsers.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existing) {
-      setCurrentUser(normalizeGrade10User(existing));
+      const canonicalUser = normalizeGrade10User(existing);
+      setCurrentUser(canonicalUser);
       setIsAuthenticated(true);
-      return { success: true, message: `Welcome back, ${existing.name}!` };
+      return { success: true, message: `Welcome back, ${canonicalUser.name}!` };
     }
 
     const userName = name || cleanEmail.split('@')[0].replace('.', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
@@ -145,15 +173,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const normalizedNewUser = normalizeGrade10User(newUser);
+    try {
+      const registerResponse = await apiFetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(normalizedNewUser)
+      });
+      if (registerResponse.ok) {
+        const registerData = await registerResponse.json();
+        const canonicalUser = normalizeGrade10User(registerData?.user || normalizedNewUser);
+        setAllAcademyUsers((prev) => {
+          const cleaned = prev.filter(
+            (u) => String(u.email || '').trim().toLowerCase() !== cleanEmail || u.id === canonicalUser.id
+          );
+          const merged = new Map(cleaned.map((u) => [u.id, u]));
+          merged.set(canonicalUser.id, canonicalUser);
+          return Array.from(merged.values());
+        });
+        setCurrentUser(canonicalUser);
+        setIsAuthenticated(true);
+        return { success: true, message: `Account created for ${userName}! Verified with M-PESA Foundation Academy.` };
+      }
+    } catch {
+      // Local fallback for a temporary backend outage.
+    }
+
     setAllAcademyUsers((prev) => [...prev, normalizedNewUser]);
     setCurrentUser(normalizedNewUser);
     setIsAuthenticated(true);
-
-    void apiFetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(normalizedNewUser)
-    }).catch(() => undefined);
     return { success: true, message: `Account created for ${userName}! Verified with M-PESA Foundation Academy.` };
   };
 
