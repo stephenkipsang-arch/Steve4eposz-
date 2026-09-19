@@ -8,7 +8,8 @@ interface AuthContextType {
   currentUser: User;
   allAcademyUsers: User[];
   isAuthenticated: boolean;
-  loginWithAcademyEmail: (email: string, password: string, name?: string) => Promise<{ success: boolean; message: string }>;
+  loginWithAcademyEmail: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  registerWithAcademyEmail: (email: string, password: string, name: string) => Promise<{ success: boolean; message: string }>;
   switchUser: (userId: string) => void;
   updateProfile: (updatedFields: Partial<User>) => void;
   logout: () => void;
@@ -134,8 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithAcademyEmail = async (
     email: string,
-    password: string,
-    name?: string
+    password: string
   ): Promise<{ success: boolean; message: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     if (!isDomainValid(cleanEmail)) {
@@ -146,37 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const userName = name || cleanEmail.split('@')[0].replace('.', ' ').replace(/\\b\\w/g, (l) => l.toUpperCase());
-      const newUser: User = normalizeGrade10User({
-        id: `user_${Date.now()}`,
-        name: userName,
-        email: cleanEmail,
-        avatar: '/Steve4eposz-/mfa-default-avatar.jpg',
-        coverImage: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
-        role: 'Student - Grade 10', house: 'Kenya', graduationYear: '2028', gradeOrDept: 'Grade 10',
-        bio: 'Grade 10 learner | M-PESA Foundation Academy', location: 'Thika Campus, Kenya',
-        isVerifiedAcademy: true, friendsCount: 0, joinedDate: 'August 2026', clubs: []
-      });
-
-      // Try account creation first. An existing email returns 409, after which we
-      // perform a real password login. This avoids a passwordless account-claim path.
-      const register = await apiFetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newUser, password })
-      });
-      const registerData = await register.json().catch(() => ({}));
-      if (register.ok && registerData?.user) {
-        const canonicalUser = normalizeGrade10User(registerData.user);
-        setCurrentUser(canonicalUser);
-        setAllAcademyUsers((prev) => [...prev.filter((u) => u.email.toLowerCase() !== cleanEmail), canonicalUser]);
-        setIsAuthenticated(true);
-        return { success: true, message: `Account created for ${canonicalUser.name}.` };
-      }
-      if (register.status !== 409) {
-        return { success: false, message: registerData?.error || 'Could not create the Academy account.' };
-      }
-
       const response = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -195,7 +164,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return Array.from(map.values());
       });
       setIsAuthenticated(true);
-      return { success: true, message: `Welcome back, ${canonicalUser.name}!` };
+      return { success: true, message: \`Welcome back, \${canonicalUser.name}!\` };
+    } catch {
+      return { success: false, message: 'Could not reach the MFA-VEXPEX account server. Please try again.' };
+    }
+  };
+
+  const registerWithAcademyEmail = async (
+    email: string,
+    password: string,
+    name: string
+  ): Promise<{ success: boolean; message: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+    if (!isDomainValid(cleanEmail)) {
+      return { success: false, message: 'Access denied: use your M-PESA Foundation Academy email address.' };
+    }
+    if (!cleanName) {
+      return { success: false, message: 'Full name is required when creating an account.' };
+    }
+    if (password.length < 12) {
+      return { success: false, message: 'Password must be at least 12 characters.' };
+    }
+
+    try {
+      const newUser: User = normalizeGrade10User({
+        id: \`user_\${Date.now()}\`,
+        name: cleanName,
+        email: cleanEmail,
+        avatar: '/Steve4eposz-/mfa-default-avatar.jpg',
+        coverImage: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
+        role: 'Student - Grade 10', house: 'Kenya', graduationYear: '2028', gradeOrDept: 'Grade 10',
+        bio: 'Grade 10 learner | M-PESA Foundation Academy', location: 'Thika Campus, Kenya',
+        isVerifiedAcademy: true, friendsCount: 0, joinedDate: 'August 2026', clubs: []
+      });
+
+      const response = await apiFetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newUser, password })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.user) {
+        if (response.status === 409) {
+          return { success: false, message: 'An account already exists for this Academy email. Please use Sign In.' };
+        }
+        return { success: false, message: data?.error || 'Could not create the Academy account.' };
+      }
+
+      const canonicalUser = normalizeGrade10User(data.user);
+      setCurrentUser(canonicalUser);
+      setAllAcademyUsers((prev) => [...prev.filter((u) => u.email.toLowerCase() !== cleanEmail), canonicalUser]);
+      setIsAuthenticated(true);
+      return { success: true, message: \`Account created for \${canonicalUser.name}.\` };
     } catch {
       return { success: false, message: 'Could not reach the MFA-VEXPEX account server. Please try again.' };
     }
@@ -226,7 +247,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, allAcademyUsers, isAuthenticated, loginWithAcademyEmail, switchUser, updateProfile, logout, isDomainValid }}>
+    <AuthContext.Provider value={{ currentUser, allAcademyUsers, isAuthenticated, loginWithAcademyEmail, registerWithAcademyEmail, switchUser, updateProfile, logout, isDomainValid }}>
       {children}
     </AuthContext.Provider>
   );
