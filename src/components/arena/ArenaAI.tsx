@@ -35,6 +35,8 @@ type ArenaQuestion = {
   q: string;
   options: string[];
   answer: string;
+  explanation: string;
+  misconception: string;
 };
 
 const STORAGE_KEY = 'mfa_vexpex_arena_v1';
@@ -51,19 +53,46 @@ const defaultStats: ArenaStats = {
 };
 
 const questions: ArenaQuestion[] = [
-  { topic: 'Mathematics', level: 'Foundation', q: 'If 3x + 7 = 25, what is x?', options: ['4', '6', '8', '10'], answer: '6' },
-  { topic: 'Mathematics', level: 'Practice', q: 'What is the value of 2² × 2³?', options: ['16', '32', '64', '8'], answer: '32' },
-  { topic: 'Mathematics', level: 'Challenge', q: 'If x² - 5x + 6 = 0, which pair can be the roots?', options: ['1 and 6', '2 and 3', '-2 and -3', '3 and 5'], answer: '2 and 3' },
-  { topic: 'Physics', level: 'Foundation', q: 'Which formula gives pressure when force and area are known?', options: ['P = F/A', 'P = F×A', 'P = A/F', 'P = mgh'], answer: 'P = F/A' },
-  { topic: 'Physics', level: 'Practice', q: 'A force of 20 N acts on an area of 4 m². What pressure is produced?', options: ['5 Pa', '16 Pa', '24 Pa', '80 Pa'], answer: '5 Pa' },
-  { topic: 'Physics', level: 'Challenge', q: 'Which quantity is measured in pascals?', options: ['Force', 'Energy', 'Pressure', 'Power'], answer: 'Pressure' },
-  { topic: 'Chemistry', level: 'Foundation', q: 'What is the chemical symbol for sodium?', options: ['S', 'So', 'Na', 'Sn'], answer: 'Na' },
-  { topic: 'Chemistry', level: 'Practice', q: 'Which particle has a negative relative charge?', options: ['Proton', 'Neutron', 'Electron', 'Nucleus'], answer: 'Electron' },
-  { topic: 'Biology', level: 'Foundation', q: 'Which organelle is mainly responsible for releasing energy from food?', options: ['Nucleus', 'Mitochondrion', 'Ribosome', 'Cell wall'], answer: 'Mitochondrion' },
-  { topic: 'Biology', level: 'Challenge', q: 'Which process produces genetically identical daughter cells for growth and repair?', options: ['Meiosis', 'Mitosis', 'Fertilisation', 'Diffusion'], answer: 'Mitosis' }
+  { topic: 'Mathematics', level: 'Foundation', q: 'If 3x + 7 = 25, what is x?', options: ['4','6','8','10'], answer: '6', explanation: 'Subtract 7 from both sides to get 3x = 18, then divide by 3.', misconception: 'Do not divide before removing the constant term.' },
+  { topic: 'Physics', level: 'Foundation', q: 'Which formula gives pressure when force and area are known?', options: ['P = F/A','P = F×A','P = A/F','P = mgh'], answer: 'P = F/A', explanation: 'Pressure is force divided by area.', misconception: 'For the same force, increasing area reduces pressure.' },
+  { topic: 'Chemistry', level: 'Foundation', q: 'Why does sodium form Na+?', options: ['It gains one electron','It loses one electron','It gains two electrons','It loses two electrons'], answer: 'It loses one electron', explanation: 'Sodium has one outer electron and loses it to form a stable Na+ ion.', misconception: 'Positive ions form when electrons are lost.' },
+  { topic: 'Biology', level: 'Foundation', q: 'What is the main role of mitochondria?', options: ['Protein synthesis','Energy release in respiration','Photosynthesis','Cell division'], answer: 'Energy release in respiration', explanation: 'Mitochondria are major sites of aerobic respiration.', misconception: 'The nucleus controls cell activities; mitochondria mainly support aerobic respiration.' },
+  { topic: 'English', level: 'Foundation', q: 'Which sentence uses a metaphor?', options: ['The boy ran quickly.','Her voice is music to my ears.','The rain fell heavily.','She opened the door.'], answer: 'Her voice is music to my ears.', explanation: 'A metaphor compares by saying one thing is another without like or as.', misconception: 'A metaphor is not meant literally.' },
+  { topic: 'Kiswahili', level: 'Foundation', q: 'Neno “watoto” liko katika ngeli gani?', options: ['A-WA','KI-VI','U-I','LI-YA'], answer: 'A-WA', explanation: 'Watoto ni wingi wa mtoto na hupatana na ngeli ya A-WA.', misconception: 'Check both noun agreement and singular/plural form.' },
+  { topic: 'Community Service Learning', level: 'Foundation', q: 'What is the main purpose of Community Service Learning?', options: ['Only to earn marks','Connect learning with meaningful community action','Replace all classroom lessons','Avoid teamwork'], answer: 'Connect learning with meaningful community action', explanation: 'CSL connects learning, reflection and responsible action in response to community needs.', misconception: 'CSL is more than volunteering because learning and reflection are part of it.' },
+  { topic: 'General Science', level: 'Foundation', q: 'Which is a physical change?', options: ['Burning paper','Rusting iron','Melting ice','Cooking an egg'], answer: 'Melting ice', explanation: 'Melting changes state without forming a new substance.', misconception: 'A change of state can be physical rather than chemical.' },
+  { topic: 'Agriculture', level: 'Foundation', q: 'Why is soil testing useful before planting?', options: ['Changes weather','Shows soil properties and nutrient needs','Guarantees no pests','Removes all weeds'], answer: 'Shows soil properties and nutrient needs', explanation: 'Testing can guide decisions about soil pH and nutrient management.', misconception: 'Testing informs management; it does not guarantee a harvest.' },
+  { topic: 'Geography', level: 'Foundation', q: 'What does a contour line join?', options: ['Places of equal height','Equal rainfall','Equal population','Equal temperature'], answer: 'Places of equal height', explanation: 'Contour lines join points of equal elevation.', misconception: 'Contours show relief/elevation, not population.' },
+  { topic: 'History & Citizenship', level: 'Foundation', q: 'Why compare historical sources?', options: ['Make history longer','Check evidence and perspectives','Remove evidence','Avoid dates'], answer: 'Check evidence and perspectives', explanation: 'Comparing sources helps assess evidence, purpose and perspective.', misconception: 'Different sources can have different reliability and perspectives.' },
+  { topic: 'Business Studies', level: 'Foundation', q: 'What is profit?', options: ['Sales minus cost','Cost minus sales','Sales plus cost','Assets minus cash'], answer: 'Sales minus cost', explanation: 'Profit is revenue minus the costs incurred.', misconception: 'High sales do not automatically mean high profit.' },
+  { topic: 'Computer Studies', level: 'Foundation', q: 'What is an algorithm?', options: ['A screen','A step-by-step procedure for solving a problem','A printer','A storage device'], answer: 'A step-by-step procedure for solving a problem', explanation: 'An algorithm is an ordered procedure for accomplishing a task.', misconception: 'An algorithm is the procedure; a program implements instructions in code.' },
+  { topic: 'ICT', level: 'Foundation', q: 'What is phishing?', options: ['Backup','A deceptive attempt to obtain information','Keyboard','Spreadsheet formula'], answer: 'A deceptive attempt to obtain information', explanation: 'Phishing uses deceptive messages or sites to trick people into revealing information.', misconception: 'Phishing is mainly social engineering, not a hardware fault.' },
+  { topic: 'Home Science', level: 'Foundation', q: 'Why is a balanced diet important?', options: ['Provides needed nutrients in suitable amounts','Removes need for water','Prevents every disease','Means one food'], answer: 'Provides needed nutrients in suitable amounts', explanation: 'A balanced diet supplies required nutrients and energy in appropriate proportions.', misconception: 'Balance means variety and appropriate amounts.' },
+  { topic: 'Literature in English', level: 'Foundation', q: 'What is characterization?', options: ['Chapters only','How a writer presents a character','Setting only','Title only'], answer: 'How a writer presents a character', explanation: 'Characterization uses actions, speech, thoughts, description and relationships.', misconception: 'Characterization is broader than physical description.' },
+  { topic: 'Fasihi ya Kiswahili', level: 'Foundation', q: 'Fasihi simulizi husambazwa hasa kupitia nini?', options: ['Masimulizi na utendaji','Vitabu pekee','Ramani','Michoro pekee'], answer: 'Masimulizi na utendaji', explanation: 'Fasihi simulizi is transmitted orally and through performance.', misconception: 'It includes performance forms such as songs, narratives and proverbs.' },
+  { topic: 'Christian Religious Education', level: 'Foundation', q: 'What is a key purpose of CRE?', options: ['Memorise names only','Understand Christian teachings and values','Avoid moral discussion','Replace other subjects'], answer: 'Understand Christian teachings and values', explanation: 'CRE supports understanding, interpretation and application of Christian teachings and values.', misconception: 'Religious education involves application, not memorisation alone.' },
+  { topic: 'Islamic Religious Education', level: 'Foundation', q: 'What does Sunnah generally refer to?', options: ['Prophetic practices and teachings','A map','A formula','A language family'], answer: 'Prophetic practices and teachings', explanation: 'Sunnah refers to the practices, teachings and example associated with Prophet Muhammad.', misconception: 'Sunnah is broader than one quotation.' },
+  { topic: 'Hindu Religious Education', level: 'Foundation', q: 'What does dharma broadly relate to?', options: ['Duties, right conduct and moral order','Electricity','Map scale','Chemical element'], answer: 'Duties, right conduct and moral order', explanation: 'Dharma broadly concerns duty, ethical conduct and moral order.', misconception: 'Its meaning is broader than simply “religion”.' },
+  { topic: 'French', level: 'Foundation', q: 'What does “bonjour” mean?', options: ['Hello/good morning','Goodbye','Thank you','Please'], answer: 'Hello/good morning', explanation: 'Bonjour is a common French greeting used during the day.', misconception: 'Au revoir is used for goodbye.' },
+  { topic: 'German', level: 'Foundation', q: 'What does “Guten Morgen” mean?', options: ['Good morning','Good night','Thank you','See you later'], answer: 'Good morning', explanation: 'Guten Morgen is the German greeting for good morning.', misconception: 'Gute Nacht means good night.' },
+  { topic: 'Arabic', level: 'Foundation', q: 'What does “marhaban” commonly mean?', options: ['Hello/welcome','Goodbye','Book','Water'], answer: 'Hello/welcome', explanation: 'Marhaban is a common Arabic greeting.', misconception: 'It is a greeting, not an object.' },
+  { topic: 'Indigenous Languages', level: 'Foundation', q: 'Why is learning an indigenous language valuable?', options: ['Supports cultural knowledge and communication','Removes identity','Prevents communication','Only helps exams'], answer: 'Supports cultural knowledge and communication', explanation: 'Languages carry cultural knowledge, identity and oral traditions.', misconception: 'Language carries culture and knowledge, not vocabulary alone.' },
+  { topic: 'Music & Dance', level: 'Foundation', q: 'What is rhythm?', options: ['Pattern of beats and durations','Instrument colour','Stage size','Singer name'], answer: 'Pattern of beats and durations', explanation: 'Rhythm organizes sounds and silences over time.', misconception: 'Rhythm concerns timing; pitch concerns how high or low a sound is.' },
+  { topic: 'Theatre & Film', level: 'Foundation', q: 'What is a script?', options: ['Written plan of dialogue and action','Camera lens','Seat','Costume only'], answer: 'Written plan of dialogue and action', explanation: 'A script provides dialogue, actions and directions for performance or film.', misconception: 'A script can contain more than dialogue.' },
+  { topic: 'Fine Arts', level: 'Foundation', q: 'What is composition in visual art?', options: ['Arrangement of elements','Price','Artist name','Frame only'], answer: 'Arrangement of elements', explanation: 'Composition is how visual elements are organized to create structure and meaning.', misconception: 'Composition is about arrangement, not just materials.' },
+  { topic: 'Physical Education', level: 'Foundation', q: 'Why warm up before physical activity?', options: ['Prepare the body','Guarantee no injury','Replace hydration','Stop heart rate rising'], answer: 'Prepare the body', explanation: 'A suitable warm-up gradually prepares the body for activity.', misconception: 'A warm-up helps prepare the body but cannot guarantee no injury.' },
+  { topic: 'Sports & Recreation', level: 'Foundation', q: 'Why are rules important in sport?', options: ['Support fair and safe participation','Stop competition','Remove teamwork','Make skills unnecessary'], answer: 'Support fair and safe participation', explanation: 'Rules provide a common framework for fair play and safety.', misconception: 'Rules structure competition rather than removing it.' },
+  { topic: 'Aviation', level: 'Foundation', q: 'What force opposes an aircraft moving through air?', options: ['Drag','Lift','Weight','Thrust'], answer: 'Drag', explanation: 'Drag is aerodynamic resistance acting opposite motion through air.', misconception: 'Lift acts generally upward; drag opposes forward motion.' },
+  { topic: 'Building Construction', level: 'Foundation', q: 'Why is a foundation important?', options: ['Transfers loads safely to ground','Decoration only','Replaces roof','Supplies electricity'], answer: 'Transfers loads safely to ground', explanation: 'Foundations distribute structural loads to the ground and support stability.', misconception: 'A foundation is structural, not decorative.' },
+  { topic: 'Electricity', level: 'Foundation', q: 'What does a circuit breaker mainly do?', options: ['Interrupt a circuit during a fault','Increase voltage','Store electricity','Create fuel'], answer: 'Interrupt a circuit during a fault', explanation: 'A circuit breaker opens a circuit when excessive current or a defined fault occurs.', misconception: 'It protects the circuit; it is not an energy source.' },
+  { topic: 'Metalwork', level: 'Foundation', q: 'Why is marking out important before cutting metal?', options: ['Guides accurate cutting','Makes metal softer','Replaces safety equipment','Removes need for measurement'], answer: 'Guides accurate cutting', explanation: 'Marking out transfers required dimensions and shapes before cutting or machining.', misconception: 'Marking out supports accuracy but does not replace safe working.' },
+  { topic: 'Power Mechanics', level: 'Foundation', q: 'What is a main purpose of engine lubrication?', options: ['Reduce friction and wear','Increase corrosion','Remove fuel','Stop movement'], answer: 'Reduce friction and wear', explanation: 'Lubricant reduces friction between moving surfaces and limits wear.', misconception: 'Lubrication supports smooth movement; it does not stop the engine.' },
+  { topic: 'Wood Technology', level: 'Foundation', q: 'Why is timber seasoned?', options: ['Reduce excess moisture and improve stability','Turn it into metal','Remove grain','Avoid measurement'], answer: 'Reduce excess moisture and improve stability', explanation: 'Seasoning reduces moisture to a suitable level and improves stability.', misconception: 'Seasoning does not remove the timber grain.' },
+  { topic: 'Media Technology', level: 'Foundation', q: 'What does image resolution relate to?', options: ['Amount of image detail represented','Battery size','File name','Speaker volume'], answer: 'Amount of image detail represented', explanation: 'Resolution describes the amount of detail represented, often using pixel dimensions.', misconception: 'Resolution is not the same as file size or volume.' },
+  { topic: 'Marine & Fisheries Technology', level: 'Foundation', q: 'Why is responsible fishing important?', options: ['Conserve aquatic resources','Remove all fish','Prevent monitoring','Increase waste'], answer: 'Conserve aquatic resources', explanation: 'Responsible fishing supports sustainable use and healthy aquatic ecosystems.', misconception: 'Sustainability is about maintaining resources, not maximizing the immediate catch.' }
 ];
 
-const topics = ['Mathematics', 'Physics', 'Chemistry', 'Biology'] as const;
+const topics = Array.from(new Set(questions.map((q) => q.topic))) as ArenaQuestion['topic'][];
 
 const getNextSaturday = () => {
   const now = new Date();
@@ -101,16 +130,15 @@ export const ArenaAI: React.FC = () => {
   const [topic, setTopic] = useState<(typeof topics)[number]>('Mathematics');
   const [answer, setAnswer] = useState('');
   const [checked, setChecked] = useState(false);
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [stats, setStats] = useState<ArenaStats>(() => getStoredItem<ArenaStats>(STORAGE_KEY, defaultStats));
   const [countdown, setCountdown] = useState(() => getCountdown(getNextSaturday()));
   const nextCompetition = useMemo(getNextSaturday, []);
 
   const question = useMemo(() => {
     const topicQuestions = questions.filter((item) => item.topic === topic);
-    const preferredLevel: ArenaQuestion['level'] =
-      stats.correct >= 8 ? 'Challenge' : stats.correct >= 3 ? 'Practice' : 'Foundation';
-    return topicQuestions.find((item) => item.level === preferredLevel) || topicQuestions[0];
-  }, [topic, stats.correct]);
+    return topicQuestions[questionIndex % Math.max(topicQuestions.length, 1)] || questions[0];
+  }, [topic, questionIndex]);
 
   const accuracy = stats.answered ? Math.round((stats.correct / stats.answered) * 100) : 0;
   const badges = getBadgeList(stats);
@@ -126,6 +154,13 @@ export const ArenaAI: React.FC = () => {
 
   const resetQuestion = (nextTopic: (typeof topics)[number]) => {
     setTopic(nextTopic);
+    setQuestionIndex(0);
+    setAnswer('');
+    setChecked(false);
+  };
+
+  const nextQuestion = () => {
+    setQuestionIndex((index) => index + 1);
     setAnswer('');
     setChecked(false);
   };
@@ -184,7 +219,7 @@ export const ArenaAI: React.FC = () => {
             <div className="w-14 h-14 rounded-2xl bg-[#D4AF37] text-[#07111F] flex items-center justify-center shadow-lg shrink-0"><BrainCircuit className="w-8 h-8" /></div>
             <div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Arena AI</h1>
-              <p className="mt-2 text-sm sm:text-base text-white/75 max-w-2xl leading-relaxed">Your Grade 10 learning arena: practise, build a streak, earn XP and prepare for the weekly Saturday challenge.</p>
+              <p className="mt-2 text-sm sm:text-base text-white/75 max-w-2xl leading-relaxed">Your Grade 10 learning coach: find misunderstandings, teach the concept clearly, earn points and build mastery.</p>
             </div>
           </div>
 
@@ -223,8 +258,8 @@ export const ArenaAI: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#FFF8E1] text-[#9A7600] flex items-center justify-center"><BookOpen className="w-5 h-5" /></div>
               <div>
-                <h2 className="font-black text-lg">AI Study Coach</h2>
-                <p className="text-xs text-[#65676B]">Practice changes level as your results improve.</p>
+                <h2 className="font-black text-lg">AI Learning Coach</h2>
+                <p className="text-xs text-[#65676B]">Diagnose a misunderstanding, learn why, earn points, then move on.</p>
               </div>
             </div>
             <div className="text-right">
@@ -254,9 +289,13 @@ export const ArenaAI: React.FC = () => {
             </div>
             <button onClick={checkAnswer} disabled={!answer || checked} className="mt-3 w-full py-2.5 rounded-xl bg-[#D4AF37] text-[#07111F] font-black text-xs disabled:opacity-40">Check my answer</button>
             {checked && (
-              <div className={`mt-3 p-3 rounded-xl text-xs font-bold flex items-start gap-2 ${answer === question.answer ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-[#FEF3C7] text-[#92400E]'}`}>
-                {answer === question.answer ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
-                <span>{answer === question.answer ? 'Correct! You earned XP. Your next question will adapt to your progress.' : `Not quite. The correct answer is ${question.answer}. Review the concept and try another question.`}</span>
+              <div className={`mt-3 p-3 rounded-xl text-xs ${answer === question.answer ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-[#FEF3C7] text-[#92400E]'}`}>
+                <div className="flex items-start gap-2 font-bold">
+                  {answer === question.answer ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
+                  <span>{answer === question.answer ? 'Correct! You earned learning points. Reinforce the idea before moving on.' : `Misunderstanding detected: ${question.misconception}`}</span>
+                </div>
+                <div className="mt-2 font-medium leading-relaxed"><b>Teach me:</b> {question.explanation}</div>
+                <button onClick={nextQuestion} className="mt-3 w-full py-2 rounded-xl bg-[#07111F] text-white font-black">Next learning check →</button>
               </div>
             )}
           </div>
