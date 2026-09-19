@@ -15,22 +15,11 @@ import {
   Message,
   House
 } from '../types';
-import {
-  INITIAL_POSTS,
-  INITIAL_STORIES,
-  INITIAL_REELS,
-  ACADEMY_USERS,
-  CURRENT_USER,
-  INITIAL_MARKETPLACE,
-  INITIAL_EVENTS,
-  INITIAL_CHATS,
-  INITIAL_NOTIFICATIONS,
-  HOUSES_DATA
-} from '../data/mockData';
+import { CURRENT_USER } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
 
-export type ActiveTab = 'feed' | 'reels' | 'groups' | 'marketplace' | 'events' | 'profile' | 'saved' | 'directory';
+export type ActiveTab = 'feed' | 'reels' | 'arena-ai' | 'marketplace' | 'events' | 'profile' | 'saved' | 'directory';
 
 interface OpenChatWindow {
   threadId: string;
@@ -103,11 +92,6 @@ interface AppContextType {
   addCampusEvent: (event: Omit<CampusEvent, 'id' | 'organizer' | 'attendeesCount' | 'isUserRsvp'>) => void;
   toggleEventRsvp: (eventId: string, status: 'going' | 'interested') => void;
 
-  // Houses
-  houses: HouseStats[];
-  selectedHouse: House | null;
-  setSelectedHouse: (house: House | null) => void;
-
   // Messenger
   chatThreads: ChatThread[];
   openChatWindows: OpenChatWindow[];
@@ -165,7 +149,7 @@ const resolveStoredUser = (candidate: unknown): User => {
 };
 
 const normalizeStoredPosts = (value: unknown): Post[] => {
-  if (!Array.isArray(value)) return INITIAL_POSTS;
+  if (!Array.isArray(value)) return [];
 
   return value.map((post) => {
     if (!post || typeof post !== 'object') return null;
@@ -185,7 +169,7 @@ const normalizeStoredPosts = (value: unknown): Post[] => {
 };
 
 const normalizeStoredReels = (value: unknown): Reel[] => {
-  if (!Array.isArray(value)) return INITIAL_REELS;
+  if (!Array.isArray(value)) return [];
 
   return value.map((reel) => {
     if (!reel || typeof reel !== 'object') return null;
@@ -212,12 +196,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Posts State
   const [posts, setPosts] = useState<Post[]>(() => {
-    const storedPosts = getStoredItem<unknown>('mfa_vexpex_posts_v4', []);
+    const storedPosts = getStoredItem<unknown>('mfa_vexpex_posts_v5', []);
     return normalizeStoredPosts(storedPosts);
   });
 
   const [savedPostIds, setSavedPostIds] = useState<string[]>(() => {
-    return getStoredItem<string[]>('mfa_vexpex_saved_posts_v3', []);
+    return getStoredItem<string[]>('mfa_vexpex_saved_posts_v4', []);
   });
 
   // Stories State
@@ -226,7 +210,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Reels & Shorts State
   const [reels, setReels] = useState<Reel[]>(() => {
-    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v4', []);
+    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v5', []);
     return normalizeStoredReels(storedReels);
   });
   const [activeReelIndex, setActiveReelIndex] = useState<number>(0);
@@ -235,16 +219,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Marketplace State
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(() => {
-    return getStoredItem<MarketplaceItem[]>('mfa_vexpex_market_v3', []);
+    return getStoredItem<MarketplaceItem[]>('mfa_vexpex_market_v4', []);
   });
   const [marketplaceFilterCategory, setMarketplaceFilterCategory] = useState<string>('All');
 
   // Events State
   const [events, setEvents] = useState<CampusEvent[]>([]);
-
-  // Houses State
-  const [houses, setHouses] = useState<HouseStats[]>(HOUSES_DATA);
-  const [selectedHouse, setSelectedHouse] = useState<House | null>(null);
 
   // Messenger State
   const [chatThreads, setChatThreads] = useState<ChatThread[]>([]);
@@ -336,13 +316,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setPosts((prev) => [newPost, ...prev]);
 
-    // Give house points if tagged with specific house
-    if (houseTag && houseTag !== 'All Academy' && houseTag !== 'Staff / Administration') {
-      setHouses((prev) =>
-        prev.map((h) => (h.name === houseTag ? { ...h, points: h.points + 5 } : h))
-      );
-    }
-  };
+    };
 
   const reactToPost = (postId: string, reaction: ReactionType) => {
     setPosts((prev) =>
@@ -755,9 +729,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         events,
         addCampusEvent,
         toggleEventRsvp,
-        houses,
-        selectedHouse,
-        setSelectedHouse,
         chatThreads,
         openChatWindows,
         openChatWithUser,
