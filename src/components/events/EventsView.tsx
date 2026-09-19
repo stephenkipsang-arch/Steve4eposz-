@@ -19,7 +19,7 @@ import { CampusEvent } from '../../types';
 const EVENT_CATEGORIES = [
   'All',
   'Sports & Interhouse',
-  'Academic & IB',
+  'Academic & Learning',
   'Arts & Culture',
   'Leadership (VEXPEX)',
   'Clubs & Hackathons'
@@ -76,7 +76,7 @@ export const EventsView: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs text-[#65676B] mt-0.5">
-            Inter-house galas, IB defense symposia, orchestral performances, and VEXPEX townhalls.
+            Inter-house galas, Grade 10 learning showcases, orchestral performances, and VEXPEX townhalls.
           </p>
         </div>
 
