@@ -682,7 +682,7 @@ export const ReelsView: React.FC = () => {
                           <div className="flex items-center gap-1 font-bold text-xs text-[#050505]">
                             {comment.author.name}
                             <span className="text-[10px] font-normal text-[#65676B]">
-                              • {comment.author.house}
+                              • Grade 10
                             </span>
                           </div>
                           <p className="text-xs text-[#050505] mt-0.5 leading-relaxed break-words">
@@ -758,7 +758,7 @@ export const ReelsView: React.FC = () => {
               >
                 {/* Video / Poster preview */}
                 <video
-                  src={reel.videoUrl}
+                  src={reel.videoUrl?.startsWith('/') ? apiUrl(reel.videoUrl) : reel.videoUrl}
                   poster={reel.posterUrl}
                   muted
                   playsInline
