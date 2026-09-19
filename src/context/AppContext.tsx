@@ -754,7 +754,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       [threadId]: [...(prev[threadId] || []), newMsg]
     }));
 
-    // Update threads preview
+    // Persist to the shared server as well as local storage.
+    void apiFetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        senderId: currentUser.id,
+        receiverId,
+        text,
+        imageUrl
+      })
+    }).catch((error) => {
+      console.warn('Could not sync message to shared server:', error);
+    });
+
     setChatThreads((prev) =>
       prev.map((th) => {
         if (th.user.id === receiverId) {
@@ -768,6 +781,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
   };
+
+  // Pull shared messages after refresh and periodically while the chat is open.
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser.id) return;
+
+    let cancelled = false;
+
+    const syncMessages = async () => {
+      const peers = chatThreads.map((thread) => thread.user.id).filter(Boolean);
+      for (const peerId of peers) {
+        try {
+          const response = await apiFetch(`/api/messages?userId=${encodeURIComponent(currentUser.id)}&peerId=${encodeURIComponent(peerId)}`);
+          if (!response.ok) continue;
+          const data = await response.json();
+          const serverMessages = Array.isArray(data?.messages) ? data.messages : [];
+          if (cancelled || serverMessages.length === 0) continue;
+
+          const threadId = `chat_${peerId.replace('user_', '')}`;
+          setMessages((prev) => {
+            const existing = prev[threadId] || [];
+            const byId = new Map(existing.map((message) => [message.id, message]));
+            serverMessages.forEach((message: Message) => byId.set(message.id, message));
+            return { ...prev, [threadId]: Array.from(byId.values()) };
+          });
+        } catch (error) {
+          console.warn('Could not sync shared messages:', error);
+        }
+      }
+    };
+
+    void syncMessages();
+    const interval = window.setInterval(() => void syncMessages(), 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [isAuthenticated, currentUser.id, chatThreads.length]);
 
   // Notifications Handlers
   const markNotificationAsRead = (id: string) => {
