@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Search,
   Home,
-  Users,
   Store,
   Calendar,
   Plus,
@@ -16,7 +15,6 @@ import {
   Sparkles,
   Bookmark,
   Share2,
-  Trophy,
   School,
   Film,
   X
@@ -185,7 +183,7 @@ export const Navbar: React.FC = () => {
                           )}
                         </div>
                         <div className="text-[11px] text-[#65676B] truncate">
-                          {user.house} House • {user.role}
+                          Grade 10 Learner
                         </div>
                       </div>
                     </button>
@@ -283,19 +281,14 @@ export const Navbar: React.FC = () => {
         </button>
 
         <button
-          id="nav-tab-groups"
-          onClick={() => setActiveTab('groups')}
-          className={`relative flex items-center justify-center flex-1 max-w-24 h-full rounded-lg transition-colors cursor-pointer group ${
-            activeTab === 'groups'
-              ? 'text-[#1877F2]'
-              : 'text-[#65676B] hover:bg-[#F2F2F2]'
-          }`}
-          title="Houses & Clubs"
+          id="nav-tab-arena-ai"
+          onClick={() => setActiveTab('arena-ai')}
+          className={`relative flex items-center justify-center flex-1 max-w-24 h-full rounded-lg transition-colors cursor-pointer group ${activeTab === 'arena-ai' ? 'text-[#8A6800]' : 'text-[#65676B] hover:bg-[#F2F2F2]'}`}
+          title="Arena AI"
         >
-          <Users className={`w-7 h-7 ${activeTab === 'groups' ? 'stroke-[2.5]' : ''}`} />
-          <span className="absolute top-2 right-4 sm:right-6 w-2 h-2 rounded-full bg-[#FA383E]" />
-          {activeTab === 'groups' && (
-            <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#1877F2] rounded-t-md" />
+          <Sparkles className={`w-7 h-7 ${activeTab === 'arena-ai' ? 'stroke-[2.5]' : ''}`} />
+          {activeTab === 'arena-ai' && (
+            <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#D4AF37] rounded-t-md" />
           )}
         </button>
 
@@ -648,7 +641,7 @@ export const Navbar: React.FC = () => {
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#1877F2] fill-[#1877F2] text-white" />
                   </div>
                   <div className="text-xs text-[#65676B] truncate">
-                    {currentUser.house} House • {currentUser.role}
+                    Grade 10 Learner
                   </div>
                   <div className="text-[11px] text-[#1877F2] font-semibold mt-0.5">
                     View your profile
