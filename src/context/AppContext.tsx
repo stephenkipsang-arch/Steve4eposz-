@@ -19,6 +19,8 @@ import {
   INITIAL_POSTS,
   INITIAL_STORIES,
   INITIAL_REELS,
+  ACADEMY_USERS,
+  CURRENT_USER,
   INITIAL_MARKETPLACE,
   INITIAL_EVENTS,
   INITIAL_CHATS,
@@ -136,6 +138,72 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const resolveStoredUser = (candidate: unknown): User => {
+  if (candidate && typeof candidate === 'object') {
+    const value = candidate as Partial<User>;
+    const knownUser = typeof value.id === 'string'
+      ? ACADEMY_USERS.find((user) => user.id === value.id)
+      : undefined;
+
+    if (knownUser && (!value.avatar || typeof value.avatar !== 'string')) {
+      return knownUser;
+    }
+
+    if (
+      typeof value.id === 'string' &&
+      typeof value.name === 'string' &&
+      typeof value.avatar === 'string' &&
+      typeof value.house === 'string'
+    ) {
+      return value as User;
+    }
+
+    if (knownUser) return knownUser;
+  }
+
+  return CURRENT_USER;
+};
+
+const normalizeStoredPosts = (value: unknown): Post[] => {
+  if (!Array.isArray(value)) return INITIAL_POSTS;
+
+  return value.map((post) => {
+    if (!post || typeof post !== 'object') return null;
+
+    const item = post as Post;
+    return {
+      ...item,
+      author: resolveStoredUser(item.author),
+      comments: Array.isArray(item.comments)
+        ? item.comments.map((comment) => ({
+            ...comment,
+            author: resolveStoredUser(comment?.author)
+          }))
+        : []
+    };
+  }).filter((post): post is Post => post !== null);
+};
+
+const normalizeStoredReels = (value: unknown): Reel[] => {
+  if (!Array.isArray(value)) return INITIAL_REELS;
+
+  return value.map((reel) => {
+    if (!reel || typeof reel !== 'object') return null;
+
+    const item = reel as Reel;
+    return {
+      ...item,
+      author: resolveStoredUser(item.author),
+      comments: Array.isArray(item.comments)
+        ? item.comments.map((comment) => ({
+            ...comment,
+            author: resolveStoredUser(comment?.author)
+          }))
+        : []
+    };
+  }).filter((reel): reel is Reel => reel !== null);
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('feed');
@@ -144,7 +212,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Posts State
   const [posts, setPosts] = useState<Post[]>(() => {
-    return getStoredItem<Post[]>('mfa_vexpex_posts_v3', INITIAL_POSTS);
+    const storedPosts = getStoredItem<unknown>('mfa_vexpex_posts_v3', INITIAL_POSTS);
+    return normalizeStoredPosts(storedPosts);
   });
 
   const [savedPostIds, setSavedPostIds] = useState<string[]>(() => {
@@ -157,7 +226,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Reels & Shorts State
   const [reels, setReels] = useState<Reel[]>(() => {
-    return getStoredItem<Reel[]>('mfa_vexpex_reels_v3', INITIAL_REELS);
+    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v3', INITIAL_REELS);
+    return normalizeStoredReels(storedReels);
   });
   const [activeReelIndex, setActiveReelIndex] = useState<number>(0);
   const [isCreateReelOpen, setIsCreateReelOpen] = useState<boolean>(false);
