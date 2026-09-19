@@ -45,13 +45,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let active = true;
     const syncUsers = async () => {
       try {
+        await apiFetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(normalizeGrade10User(currentUser))
+        });
+
         const response = await apiFetch('/api/users');
         if (!response.ok) return;
         const data = await response.json();
         if (!active || !Array.isArray(data.users)) return;
+
         setAllAcademyUsers((local) => {
           const merged = new Map(local.map((u) => [u.id, u]));
-          data.users.forEach((u: User) => merged.set(u.id, { ...merged.get(u.id), ...u }));
+          data.users.forEach((u: User) => {
+            const normalized = normalizeGrade10User(u);
+            merged.set(normalized.id, { ...merged.get(normalized.id), ...normalized });
+          });
+          const current = normalizeGrade10User(currentUser);
+          merged.set(current.id, { ...merged.get(current.id), ...current });
           return Array.from(merged.values());
         });
       } catch {
@@ -61,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void syncUsers();
     const timer = window.setInterval(() => void syncUsers(), 5000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, currentUser.id]);
 
   // Publish presence so other devices can see active students.
   useEffect(() => {
@@ -132,9 +144,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clubs: []
     };
 
-    setAllAcademyUsers((prev) => [...prev, newUser]);
-    setCurrentUser(normalizeGrade10User(newUser));
+    const normalizedNewUser = normalizeGrade10User(newUser);
+    setAllAcademyUsers((prev) => [...prev, normalizedNewUser]);
+    setCurrentUser(normalizedNewUser);
     setIsAuthenticated(true);
+
+    void apiFetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(normalizedNewUser)
+    }).catch(() => undefined);
     return { success: true, message: `Account created for ${userName}! Verified with M-PESA Foundation Academy.` };
   };
 
