@@ -20,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const LOCAL_STORAGE_USER_KEY = 'mfa_vexpex_current_user_v4';
 const LOCAL_STORAGE_ALL_USERS_KEY = 'mfa_vexpex_all_users_v4';
 const LOCAL_STORAGE_AUTH_KEY = 'mfa_vexpex_authenticated_v1';
+const FRESH_START_KEY = 'mfa_vexpex_clean_start_v1';
 
 const normalizeGrade10User = (user: User): User => ({
   ...user,
@@ -32,8 +33,24 @@ const normalizeGrade10User = (user: User): User => ({
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [allAcademyUsers, setAllAcademyUsers] = useState<User[]>(() => getStoredItem<User[]>(LOCAL_STORAGE_ALL_USERS_KEY, []));
-  const [currentUser, setCurrentUser] = useState<User>(() => normalizeGrade10User(getStoredItem<User>(LOCAL_STORAGE_USER_KEY, CURRENT_USER)));
+  const [allAcademyUsers, setAllAcademyUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User>(() => normalizeGrade10User(CURRENT_USER));
+
+  // Clean-start migration: remove every legacy client-side account/session/cache once.
+  useEffect(() => {
+    if (getStoredItem<boolean>(FRESH_START_KEY, false)) return;
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+      localStorage.removeItem(LOCAL_STORAGE_ALL_USERS_KEY);
+      localStorage.removeItem(LOCAL_STORAGE_AUTH_KEY);
+      localStorage.removeItem('mfa_vexpex_current_user_v3');
+      localStorage.removeItem('mfa_vexpex_all_users_v3');
+      localStorage.removeItem('mfa_vexpex_current_user_v2');
+      localStorage.removeItem('mfa_vexpex_all_users_v2');
+    } finally {
+      setStoredItem(FRESH_START_KEY, true);
+    }
+  }, []);
 
   useEffect(() => setStoredItem(LOCAL_STORAGE_USER_KEY, currentUser), [currentUser]);
   useEffect(() => setStoredItem(LOCAL_STORAGE_ALL_USERS_KEY, allAcademyUsers), [allAcademyUsers]);
