@@ -19,6 +19,7 @@ export const AuthModal: React.FC = () => {
 
   const [emailInput, setEmailInput] = useState('');
   const [nameInput, setNameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -29,7 +30,7 @@ export const AuthModal: React.FC = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    void loginWithAcademyEmail(emailInput, nameInput).then((res) => {
+    void loginWithAcademyEmail(emailInput, passwordInput, nameInput).then((res) => {
       if (res.success) {
         setSuccessMessage(res.message);
         setTimeout(() => {
@@ -87,7 +88,7 @@ export const AuthModal: React.FC = () => {
 
           <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
             <div className="font-bold text-xs text-[#050505] uppercase tracking-wider">
-              Sign in or create your academy account
+              Secure Academy account
             </div>
             <p className="text-[11px] text-[#65676B] leading-relaxed mt-1">
               This is a fresh MFA-VEXPEX network. No demo students, teachers, posts, messages, or marketplace items are preloaded.
@@ -130,7 +131,26 @@ export const AuthModal: React.FC = () => {
                 required
               />
               <span className="text-[10px] text-[#65676B] mt-1 block">
-                Must end with @mpesafoundationacademy.ac.ke. New accounts start with an empty profile and empty feed.
+                Must end with @mpesafoundationacademy.ac.ke. Your password is stored on the server as a secure hash; it is never shown in your profile.
+              </span>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-[#050505] mb-1">
+                Password *
+              </label>
+              <input
+                type="password"
+                placeholder="At least 12 characters"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                minLength={12}
+                autoComplete="current-password"
+                className="w-full bg-[#F0F2F5] text-xs px-3 py-2.5 rounded-xl border border-[#CED0D4] focus:bg-white focus:border-[#1877F2] focus:outline-hidden"
+                required
+              />
+              <span className="text-[10px] text-[#65676B] mt-1 block">
+                Use a unique password you do not share with other people.
               </span>
             </div>
 
