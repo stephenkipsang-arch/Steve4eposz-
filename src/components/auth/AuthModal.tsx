@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import { House, UserRole } from '../../types';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setIsAuthModalOpen } = useApp();
@@ -20,8 +19,6 @@ export const AuthModal: React.FC = () => {
 
   const [emailInput, setEmailInput] = useState('');
   const [nameInput, setNameInput] = useState('');
-  const [houseInput, setHouseInput] = useState<House>('Kenya');
-  const [roleInput, setRoleInput] = useState<UserRole>('Student - IB DP2');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -32,7 +29,7 @@ export const AuthModal: React.FC = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    const res = loginWithAcademyEmail(emailInput, nameInput, houseInput, roleInput);
+    const res = loginWithAcademyEmail(emailInput, nameInput);
     if (res.success) {
       setSuccessMessage(res.message);
       setTimeout(() => {
@@ -79,7 +76,7 @@ export const AuthModal: React.FC = () => {
                 Restricted Academy Network
               </div>
               <p className="text-[11px] text-[#050505] leading-relaxed mt-0.5">
-                Access is strictly restricted to students, faculty, leadership, and alumni with a verified{' '}
+                Access is strictly restricted to Grade 10 learners with a verified{' '}
                 <span className="font-bold text-[#1877F2]">@mpesafoundationacademy.ac.ke</span> email address.
               </p>
             </div>
@@ -134,57 +131,20 @@ export const AuthModal: React.FC = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-semibold text-[#050505] mb-1">
-                  Full Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Kiprono Bett"
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-[#F0F2F5] text-xs px-3 py-2 rounded-xl border border-[#CED0D4] focus:outline-hidden"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#050505] mb-1">
-                  Assigned House
-                </label>
-                <select
-                  value={houseInput}
-                  onChange={(e) => setHouseInput(e.target.value as any)}
-                  className="w-full bg-[#F0F2F5] text-xs px-3 py-2 rounded-xl border border-[#CED0D4] focus:outline-hidden"
-                >
-                  <option value="Kenya">🦁 Kenya House</option>
-                  <option value="Kilimanjaro">🏔️ Kilimanjaro House</option>
-                  <option value="Longonot">🦅 Longonot House</option>
-                  <option value="Elgon">🦏 Elgon House</option>
-                  <option value="Staff / Administration">🏛️ Staff / Admin</option>
-                </select>
-              </div>
-            </div>
-
             <div>
               <label className="block font-semibold text-[#050505] mb-1">
-                Academy Academic Level / Role
+                Full Name (Optional)
               </label>
-              <select
-                value={roleInput}
-                onChange={(e) => setRoleInput(e.target.value as any)}
+              <input
+                type="text"
+                placeholder="e.g. Kiprono Bett"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
                 className="w-full bg-[#F0F2F5] text-xs px-3 py-2 rounded-xl border border-[#CED0D4] focus:outline-hidden"
-              >
-                <option value="Student - IB DP2">🎓 Student - IB DP2</option>
-                <option value="Student - IB DP1">🎓 Student - IB DP1</option>
-                <option value="Student - Grade 10">📚 Student - Grade 10</option>
-                <option value="VEXPEX Council President">🏛️ VEXPEX Council President</option>
-                <option value="VEXPEX House Captain">🎖️ VEXPEX House Captain</option>
-                <option value="Faculty / Teacher">👨‍🏫 Faculty / Teacher</option>
-                <option value="House Master / Mistress">🏡 House Master / Mistress</option>
-                <option value="Academy Alumni">🌟 Academy Alumni</option>
-                <option value="Dean of Academics">📖 Dean of Academics</option>
-              </select>
+              />
+              <div className="mt-2 rounded-xl bg-[#FFF8E1] border border-[#F7D774] px-3 py-2 text-[11px] text-[#7A5B00] font-semibold">
+                Grade 10 network • Grade 10 only for now
+              </div>
             </div>
 
             <button
