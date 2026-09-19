@@ -49,3 +49,14 @@
     background: #B0B3B8;
   }
 }
+
+
+/* Thin gold frame around the entire MFA-VEXPEX experience. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  border: 2px solid #D4AF37;
+  pointer-events: none;
+  z-index: 9999;
+}
