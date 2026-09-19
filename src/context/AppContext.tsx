@@ -17,7 +17,7 @@ import {
 import { CURRENT_USER, ACADEMY_USERS } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
-import { apiUrl } from '../utils/api';
+import { apiFetch, apiUrl } from '../utils/api';
 
 export type ActiveTab = 'feed' | 'reels' | 'arena-ai' | 'lost-found' | 'marketplace' | 'events' | 'profile' | 'saved' | 'directory';
 
@@ -276,6 +276,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStoredItem('mfa_vexpex_posts_v5', posts);
   }, [posts]);
 
+  // Sync the feed with the shared server so different devices see the same posts.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let cancelled = false;
+
+    const syncSharedPosts = async () => {
+      try {
+        const response = await apiFetch('/api/posts');
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const serverPosts = normalizeStoredPosts(data?.posts);
+
+        // Upload any posts that only exist locally, then use the shared feed.
+        const serverIds = new Set(serverPosts.map((post) => post.id));
+        const localOnlyPosts = posts.filter((post) => !serverIds.has(post.id));
+
+        for (const post of localOnlyPosts) {
+          await apiFetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...post,
+              createdAt: new Date().toISOString()
+            })
+          });
+        }
+
+        if (cancelled) return;
+
+        if (localOnlyPosts.length > 0) {
+          const merged = normalizeStoredPosts([...serverPosts, ...localOnlyPosts]);
+          setPosts(merged);
+        } else if (serverPosts.length > 0 || posts.length === 0) {
+          setPosts(serverPosts);
+        }
+      } catch (error) {
+        console.warn('Shared feed sync unavailable:', error);
+      }
+    };
+
+    void syncSharedPosts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, currentUser.id]);
+
   useEffect(() => {
     setStoredItem('mfa_vexpex_saved_posts_v4', savedPostIds);
   }, [savedPostIds]);
@@ -352,7 +401,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setPosts((prev) => [newPost, ...prev]);
 
-    };
+    void apiFetch('/api/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newPost, createdAt: new Date().toISOString() })
+    }).catch((error) => {
+      console.warn('Could not sync new post to shared feed:', error);
+    });
+  };
 
   const reactToPost = (postId: string, reaction: ReactionType) => {
     setPosts((prev) =>
