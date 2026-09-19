@@ -11,6 +11,12 @@ const DB_VERSION = 2;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
+// Reel videos must live in persistent object storage because Render's normal
+// filesystem is ephemeral. Keep the service-role key server-side only.
+const SUPABASE_URL = String(process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '');
+const SUPABASE_REEL_BUCKET = String(process.env.SUPABASE_REEL_BUCKET || 'mfa-reels');
+
 app.use((req, res, next) => {
   const allowedOrigin = process.env.FRONTEND_ORIGIN || '*';
   res.header('Access-Control-Allow-Origin', allowedOrigin);
@@ -21,19 +27,81 @@ app.use((req, res, next) => {
 });
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-app.post('/api/reels/upload', express.raw({ type: ['video/*', 'application/octet-stream'], limit: '50mb' }), (req, res) => {
+async function ensureReelBucket() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return false;
+  const headers = {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    'Content-Type': 'application/json'
+  };
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ id: SUPABASE_REEL_BUCKET, name: SUPABASE_REEL_BUCKET, public: true })
+  });
+  if (response.ok || response.status === 409) return true;
+  const detail = await response.text().catch(() => '');
+  console.error('Could not ensure Reel storage bucket:', response.status, detail);
+  return false;
+}
+
+app.get('/api/reels/storage-status', (_req, res) => {
+  res.json({
+    configured: Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
+    provider: SUPABASE_URL ? 'supabase' : 'not-configured',
+    bucket: SUPABASE_REEL_BUCKET
+  });
+});
+
+app.post('/api/reels/upload', express.raw({ type: ['video/*', 'application/octet-stream'], limit: '50mb' }), async (req, res) => {
   const contentType = String(req.headers['content-type'] || '');
   if (!contentType.startsWith('video/') && contentType !== 'application/octet-stream') {
     return res.status(415).json({ error: 'Send a video file' });
   }
+
   const body = req.body;
   if (!Buffer.isBuffer(body) || body.length === 0) {
     return res.status(400).json({ error: 'Empty video upload' });
   }
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(503).json({
+      error: 'Persistent Reel storage is not configured on the server.',
+      code: 'REEL_STORAGE_NOT_CONFIGURED'
+    });
+  }
+
   const extension = contentType.includes('webm') ? 'webm' : contentType.includes('quicktime') ? 'mov' : 'mp4';
-  const filename = `reel_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${extension}`;
-  fs.writeFileSync(path.join(UPLOAD_DIR, filename), body);
-  res.status(201).json({ url: `/uploads/${filename}` });
+  const filename = `reel_${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${extension}`;
+  const ready = await ensureReelBucket();
+  if (!ready) {
+    return res.status(502).json({ error: 'Persistent Reel storage could not be prepared.', code: 'REEL_STORAGE_UNAVAILABLE' });
+  }
+
+  const objectPath = `grade10/${filename}`;
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(SUPABASE_REEL_BUCKET)}/${objectPath}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': contentType || 'video/mp4',
+        'x-upsert': 'false',
+        'cache-control': '31536000'
+      },
+      body
+    }
+  );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    console.error('Supabase Reel upload failed:', response.status, detail);
+    return res.status(502).json({ error: 'Persistent Reel storage rejected the video.', code: 'REEL_STORAGE_UPLOAD_FAILED' });
+  }
+
+  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_REEL_BUCKET}/${objectPath}`;
+  res.status(201).json({ url: publicUrl, persistent: true });
 });
 
 app.use(express.json({ limit: '1mb' }));
