@@ -60,4 +60,5 @@ export const RightSidebar: React.FC = () => {
         <p className="text-xs text-[#65676B] mt-2">Compete, learn and unlock a preview of the next MFA-VEXPEX improvement.</p>
       </div>
     </aside>
-  
+  );
+};
