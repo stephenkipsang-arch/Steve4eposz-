@@ -20,6 +20,7 @@ export const AuthModal: React.FC = () => {
   const [emailInput, setEmailInput] = useState('');
   const [nameInput, setNameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -30,7 +31,7 @@ export const AuthModal: React.FC = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    void loginWithAcademyEmail(emailInput, passwordInput, nameInput).then((res) => {
+    void loginWithAcademyEmail(emailInput, passwordInput, mode === 'signup' ? nameInput : undefined).then((res) => {
       if (res.success) {
         setSuccessMessage(res.message);
         setTimeout(() => {
@@ -91,8 +92,7 @@ export const AuthModal: React.FC = () => {
               Secure Academy account
             </div>
             <p className="text-[11px] text-[#65676B] leading-relaxed mt-1">
-              This is a fresh MFA-VEXPEX network. No demo students, teachers, posts, messages, or marketplace items are preloaded.
-              Your account appears only after you sign in with your Academy email.
+              Fresh MFA-VEXPEX start. Previous accounts are not carried into this new account system. Use Sign In for an existing account or Create Account for a new one.
             </p>
           </div>
 
@@ -100,8 +100,12 @@ export const AuthModal: React.FC = () => {
 
           {/* Academy Email Login / Registration */}
           <form onSubmit={handleDomainSubmit} className="space-y-3.5">
+            <div className="flex gap-2 p-1 rounded-xl bg-[#F0F2F5] border border-[#E2E8F0]">
+              <button type="button" onClick={() => { setMode('login'); setErrorMessage(''); setSuccessMessage(''); }} className={`flex-1 py-2 rounded-lg font-bold ${mode === 'login' ? 'bg-white shadow text-[#1877F2]' : 'text-[#65676B]'}`}>Sign In</button>
+              <button type="button" onClick={() => { setMode('signup'); setErrorMessage(''); setSuccessMessage(''); }} className={`flex-1 py-2 rounded-lg font-bold ${mode === 'signup' ? 'bg-white shadow text-[#1877F2]' : 'text-[#65676B]'}`}>Create Account</button>
+            </div>
             <div className="font-bold text-xs text-[#050505] uppercase tracking-wider">
-              Academy Email Sign In / Account Registration
+              {mode === 'login' ? 'Sign in to MFA-VEXPEX' : 'Create your MFA-VEXPEX account'}
             </div>
 
             {errorMessage && (
@@ -154,28 +158,19 @@ export const AuthModal: React.FC = () => {
               </span>
             </div>
 
-            <div>
-              <label className="block font-semibold text-[#050505] mb-1">
-                Full Name (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Kiprono Bett"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                className="w-full bg-[#F0F2F5] text-xs px-3 py-2 rounded-xl border border-[#CED0D4] focus:outline-hidden"
-              />
-              <div className="mt-2 rounded-xl bg-[#FFF8E1] border border-[#F7D774] px-3 py-2 text-[11px] text-[#7A5B00] font-semibold">
-                Grade 10 network • Grade 10 only for now
+            {mode === 'signup' && (
+              <div>
+                <label className="block font-semibold text-[#050505] mb-1">Full Name *</label>
+                <input type="text" placeholder="e.g. Kiprono Bett" value={nameInput} onChange={(e) => setNameInput(e.target.value)} className="w-full bg-[#F0F2F5] text-xs px-3 py-2 rounded-xl border border-[#CED0D4] focus:bg-white focus:border-[#1877F2] focus:outline-hidden" required={mode === 'signup'} />
               </div>
-            </div>
+            )}
 
             <button
               type="submit"
               className="w-full py-2.5 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
             >
               <UserCheck className="w-4 h-4" />
-              <span>Sign In / Create Account</span>
+              <span>{mode === 'login' ? 'Sign In' : 'Create Account'}</span>
             </button>
           </form>
         </div>
