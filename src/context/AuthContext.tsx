@@ -21,10 +21,19 @@ const LOCAL_STORAGE_USER_KEY = 'mfa_vexpex_current_user_v4';
 const LOCAL_STORAGE_ALL_USERS_KEY = 'mfa_vexpex_all_users_v4';
 const LOCAL_STORAGE_AUTH_KEY = 'mfa_vexpex_authenticated_v1';
 
+const normalizeGrade10User = (user: User): User => ({
+  ...user,
+  role: 'Student - Grade 10',
+  gradeOrDept: 'Grade 10',
+  graduationYear: '2028',
+  bio: user.bio && user.bio.includes('IB') ? 'Grade 10 learner | M-PESA Foundation Academy' : user.bio,
+  house: 'Kenya'
+});
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => getStoredItem<boolean>(LOCAL_STORAGE_AUTH_KEY, false));
   const [allAcademyUsers, setAllAcademyUsers] = useState<User[]>(() => getStoredItem<User[]>(LOCAL_STORAGE_ALL_USERS_KEY, []));
-  const [currentUser, setCurrentUser] = useState<User>(() => getStoredItem<User>(LOCAL_STORAGE_USER_KEY, CURRENT_USER));
+  const [currentUser, setCurrentUser] = useState<User>(() => normalizeGrade10User(getStoredItem<User>(LOCAL_STORAGE_USER_KEY, CURRENT_USER)));
 
   useEffect(() => setStoredItem(LOCAL_STORAGE_USER_KEY, currentUser), [currentUser]);
   useEffect(() => setStoredItem(LOCAL_STORAGE_ALL_USERS_KEY, allAcademyUsers), [allAcademyUsers]);
@@ -99,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const existing = allAcademyUsers.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existing) {
-      setCurrentUser(existing);
+      setCurrentUser(normalizeGrade10User(existing));
       setIsAuthenticated(true);
       return { success: true, message: `Welcome back, ${existing.name}!` };
     }
@@ -124,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     setAllAcademyUsers((prev) => [...prev, newUser]);
-    setCurrentUser(newUser);
+    setCurrentUser(normalizeGrade10User(newUser));
     setIsAuthenticated(true);
     return { success: true, message: `Account created for ${userName}! Verified with M-PESA Foundation Academy.` };
   };
@@ -149,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setIsAuthenticated(false);
-    setCurrentUser(CURRENT_USER);
+    setCurrentUser(normalizeGrade10User(CURRENT_USER));
   };
 
   return (
