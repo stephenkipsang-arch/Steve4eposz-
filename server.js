@@ -101,24 +101,6 @@ app.use((req, res, next) => {
 });
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-async function ensureReelBucket() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return false;
-  const headers = {
-    apikey: SUPABASE_SERVICE_ROLE_KEY,
-    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-    'Content-Type': 'application/json'
-  };
-  const response = await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ id: SUPABASE_REEL_BUCKET, name: SUPABASE_REEL_BUCKET, public: true })
-  });
-  if (response.ok || response.status === 409) return true;
-  const detail = await response.text().catch(() => '');
-  console.error('Could not ensure Reel storage bucket:', response.status, detail);
-  return false;
-}
-
 app.get('/api/reels/storage-status', (_req, res) => {
   res.json({
     configured: Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET),
