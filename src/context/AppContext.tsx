@@ -828,7 +828,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                       user: peer,
                       lastMessage: message.text || 'Media',
                       lastTimestamp: new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      unreadCount: String(message.receiverId) === String(currentUser.id) && !message.read ? 1 : 0
+                      unreadCount: String(message.receiverId) === String(currentUser.id) && !message.read ? 1 : 0,
+                      isOnline: Boolean(peer.online)
                     } as ChatThread]
               );
             }
