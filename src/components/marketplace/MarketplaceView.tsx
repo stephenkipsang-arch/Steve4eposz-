@@ -312,7 +312,7 @@ export const MarketplaceView: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Oxford IB Physics HL Course Book, Casio Calculator..."
+                  placeholder="e.g. Grade 10 Physics book, calculator..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full bg-[#F0F2F5] text-xs px-3 py-2 rounded-xl border focus:border-[#1877F2] focus:bg-white focus:outline-hidden"
