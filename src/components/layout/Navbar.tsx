@@ -23,10 +23,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp, ActiveTab } from '../../context/AppContext';
-import { ACADEMY_USERS } from '../../data/mockData';
 
 export const Navbar: React.FC = () => {
-  const { currentUser, switchUser } = useAuth();
+  const { currentUser, allAcademyUsers } = useAuth();
   const {
     activeTab,
     setActiveTab,
@@ -83,7 +82,7 @@ export const Navbar: React.FC = () => {
   }, []);
 
   // Filter search results
-  const matchingUsers = ACADEMY_USERS.filter(
+  const matchingUsers = allAcademyUsers.filter(
     (u) =>
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.house.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -660,39 +659,11 @@ export const Navbar: React.FC = () => {
               <div className="border-t border-[#CED0D4] my-2" />
 
               <div className="text-[11px] font-bold text-[#65676B] uppercase tracking-wider mb-1.5 px-2">
-                Switch Academy Profile
+                Registered Academy Accounts
               </div>
 
-              <div className="space-y-1 mb-2">
-                {ACADEMY_USERS.map((user) => (
-                  <button
-                    key={user.id}
-                    onClick={() => {
-                      switchUser(user.id);
-                      setIsAccountMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2.5 p-2 rounded-lg text-left transition-colors ${
-                      currentUser.id === user.id ? 'bg-[#E7F3FF]' : 'hover:bg-[#F0F2F5]'
-                    }`}
-                  >
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-8 h-8 rounded-full object-cover border border-[#CED0D4]"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-[#050505] truncate">{user.name}</div>
-                      <div className="text-[10px] text-[#65676B] truncate">
-                        {user.house} • {user.role}
-                      </div>
-                    </div>
-                    {currentUser.id === user.id && (
-                      <span className="text-[10px] font-bold text-[#1877F2] bg-white px-2 py-0.5 rounded-full shadow-xs">
-                        Active
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="px-2 py-2 text-[11px] text-[#65676B]">
+                Only accounts that have actually signed in are shown here.
               </div>
 
               <div className="border-t border-[#CED0D4] my-2" />
