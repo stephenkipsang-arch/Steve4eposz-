@@ -46,7 +46,17 @@ export const CreateReelModal: React.FC = () => {
           headers: { 'Content-Type': file.type || 'application/octet-stream' },
           body: file
         });
-        if (!response.ok) throw new Error('Upload failed');
+        if (!response.ok) {
+          let detail = '';
+          try {
+            const errorData = await response.json();
+            if (errorData?.code === 'REEL_STORAGE_NOT_CONFIGURED') {
+              detail = 'Persistent Reel storage is not configured yet on the server.';
+            } else if (errorData?.error) {
+              detail = String(errorData.error);
+            }
+          } catch {}
+          throw new Error(detail || 'The Reel could not be uploaded. Please try again.');
         const data = await response.json();
         finalUrl = apiUrl(data.url);
       }
@@ -55,8 +65,9 @@ export const CreateReelModal: React.FC = () => {
       setVideoUrl('');
       setCaption('');
       setIsCreateReelOpen(false);
-    } catch {
-      window.alert('The video could not be uploaded. Please try again with a video under 50 MB.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      window.alert(message || 'The video could not be uploaded. Please try again with a video under 50 MB.');
     } finally {
       setUploading(false);
     }
