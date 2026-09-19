@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import { apiFetch } from '../../utils/api';
+import { apiFetch, apiUrl } from '../../utils/api';
 import { apiFetch } from '../../utils/api';
 
 const SAMPLE_CAMPUS_FOOTAGE: Array<{title:string;url:string;poster:string;suggestedAudio:string;tags:string[]}> = [];
@@ -89,7 +89,7 @@ export const CreateReelModal: React.FC = () => {
         });
         if (!upload.ok) throw new Error('upload failed');
         const data = await upload.json();
-        finalVideoUrl = data.url;
+        finalVideoUrl = apiUrl(data.url);
       }
       if (!finalVideoUrl) return;
       addReel(finalVideoUrl, caption.trim() || 'Grade 10 campus short 🎥', audioTrack.trim() || `Original Audio • ${currentUser.name}`, 'All Academy', location, tags, posterUrl || undefined);
