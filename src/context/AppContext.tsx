@@ -8,14 +8,13 @@ import {
   CampusEvent,
   ChatThread,
   NotificationItem,
-  HouseStats,
   ReactionType,
   User,
   Comment,
   Message,
   House
 } from '../types';
-import { CURRENT_USER } from '../data/mockData';
+import { CURRENT_USER, ACADEMY_USERS } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
 
@@ -246,19 +245,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Persist state safely
   useEffect(() => {
-    setStoredItem('mfa_vexpex_posts_v4', posts);
+    setStoredItem('mfa_vexpex_posts_v5', posts);
   }, [posts]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_saved_posts_v3', savedPostIds);
+    setStoredItem('mfa_vexpex_saved_posts_v4', savedPostIds);
   }, [savedPostIds]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_market_v3', marketplaceItems);
+    setStoredItem('mfa_vexpex_market_v4', marketplaceItems);
   }, [marketplaceItems]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_reels_v4', reels);
+    setStoredItem('mfa_vexpex_reels_v5', reels);
   }, [reels]);
 
   const viewUserProfile = (user: User) => {
