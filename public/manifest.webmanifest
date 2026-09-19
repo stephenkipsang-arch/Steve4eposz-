@@ -1,0 +1,11 @@
+{
+  "name": "MFA-VEXPEX",
+  "short_name": "VEXPEX",
+  "description": "Grade 10 learning and collaboration network for M-PESA Foundation Academy.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F0F2F5",
+  "theme_color": "#07111F",
+  "orientation": "portrait-primary"
+}
