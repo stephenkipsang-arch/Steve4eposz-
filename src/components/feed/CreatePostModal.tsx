@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import { House } from '../../types';
 
 const PRESET_POST_PHOTOS = [
   'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1000&q=80',
@@ -25,55 +24,17 @@ const PRESET_POST_PHOTOS = [
   'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1000&q=80'
 ];
 
-const SAMPLE_CAMPUS_VIDEOS = [
-  {
-    title: 'Robotics & Drone Trials',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    poster: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    title: 'Athletics & Rugby Highlights',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
-    poster: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    title: 'Symphony & Performing Arts',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    poster: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&w=600&q=80'
-  }
-];
+const SAMPLE_CAMPUS_VIDEOS: { title: string; url: string; poster: string }[] = [];
 
-const FEELINGS = [
-  '🎓 studying hard for IB Mocks',
-  '🏆 feeling triumphant',
-  '🔬 in the Chemistry Lab',
-  '🤖 debugging robotics code',
-  '🎵 in orchestra rehearsal',
-  '🏉 ready for the rugby derby',
-  '🍕 enjoying dining hall meal',
-  '🌿 tree planting for MFA Green'
-];
+const FEELINGS = ['📚 focused on Grade 10 learning','🧠 working through a hard problem','🤖 building something new','✨ making progress'];
 
-const LOCATIONS = [
-  'Uongozi Leadership Centre, Thika',
-  'MFA Innovation & Robotics Lab',
-  'Main Athletics Arena & Pitch 1',
-  'Science Complex Chemistry Lab 3',
-  'Performing Arts Amphitheatre',
-  'Academy Library Silent Pods',
-  'Kenya Dormitory Common Room',
-  'Kilimanjaro Dormitory Common Room',
-  'Longonot Dormitory Common Room',
-  'Elgon Dormitory Common Room',
-  'Dining Hall & Food Court'
-];
+const LOCATIONS = ['Academy Learning Centre','Science & Technology Lab','Academy Library','Online Learning Arena'];
 
 export const CreatePostModal: React.FC = () => {
   const { isCreatePostOpen, setIsCreatePostOpen, addPost } = useApp();
   const { currentUser } = useAuth();
 
   const [content, setContent] = useState('');
-  const [houseTag, setHouseTag] = useState<House | 'All Academy'>('All Academy');
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [customPhotoUrl, setCustomPhotoUrl] = useState('');
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
@@ -160,7 +121,7 @@ export const CreatePostModal: React.FC = () => {
     addPost(
       content.trim(),
       selectedPhotos,
-      houseTag,
+      'All Academy',
       feeling,
       location,
       pollData,
@@ -320,7 +281,7 @@ export const CreatePostModal: React.FC = () => {
 
               <input
                 type="text"
-                placeholder="Ask the academy a question (e.g. Inter-House predictions)..."
+                placeholder="Ask the Grade 10 network a question..."
                 value={pollQuestion}
                 onChange={(e) => setPollQuestion(e.target.value)}
                 className="w-full bg-white text-xs px-3 py-2 rounded-lg border border-[#CED0D4] focus:outline-hidden focus:border-[#1877F2]"
@@ -473,7 +434,7 @@ export const CreatePostModal: React.FC = () => {
                   />
                   <input
                     type="text"
-                    placeholder="Optional video title (e.g. 'Kenya House Match Clip')..."
+                    placeholder="Optional video title (e.g. 'Academy Learning Clip')..."
                     value={videoTitle}
                     onChange={(e) => setVideoTitle(e.target.value)}
                     className="w-full bg-white text-xs px-3 py-1.5 rounded-lg border border-[#CED0D4] focus:outline-hidden"
