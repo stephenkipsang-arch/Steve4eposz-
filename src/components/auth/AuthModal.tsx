@@ -16,7 +16,7 @@ import { House, UserRole } from '../../types';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setIsAuthModalOpen } = useApp();
-  const { loginWithAcademyEmail } = useAuth();
+  const { loginWithAcademyEmail, isAuthenticated } = useAuth();
 
   const [emailInput, setEmailInput] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -48,12 +48,14 @@ export const AuthModal: React.FC = () => {
       <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#CED0D4] max-h-[95vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
         {/* Top Header */}
         <div className="bg-gradient-to-r from-[#1877F2] to-[#0866FF] p-6 text-white text-center relative">
-          <button
-            onClick={() => setIsAuthModalOpen(false)}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={() => setIsAuthModalOpen(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
 
           <div className="w-12 h-12 rounded-2xl bg-white text-[#1877F2] font-black text-xl flex items-center justify-center mx-auto mb-2 shadow-md">
             VP
