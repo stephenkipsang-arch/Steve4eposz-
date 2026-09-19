@@ -12,12 +12,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import { ACADEMY_USERS } from '../../data/mockData';
 import { House, UserRole } from '../../types';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setIsAuthModalOpen } = useApp();
-  const { currentUser, switchUser, loginWithAcademyEmail, isDomainValid } = useAuth();
+  const { loginWithAcademyEmail } = useAuth();
 
   const [emailInput, setEmailInput] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -89,59 +88,22 @@ export const AuthModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Switch Verified Profiles */}
-          <div>
-            <div className="font-bold text-xs text-[#050505] uppercase tracking-wider mb-2.5 flex items-center justify-between">
-              <span>Quick Switch Verified Academy Accounts</span>
-              <span className="text-[10px] text-[#1877F2] font-semibold">1-Click Login</span>
+          <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+            <div className="font-bold text-xs text-[#050505] uppercase tracking-wider">
+              Sign in or create your academy account
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {ACADEMY_USERS.map((user) => {
-                const isActive = currentUser.id === user.id;
-                return (
-                  <button
-                    key={user.id}
-                    onClick={() => handleQuickSwitch(user.id)}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      isActive
-                        ? 'border-[#1877F2] bg-[#E7F3FF] ring-2 ring-[#BEDDFF]'
-                        : 'border-[#CED0D4] hover:bg-[#F0F2F5]'
-                    }`}
-                  >
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-9 h-9 rounded-full object-cover border"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-xs text-[#050505] truncate flex items-center gap-1">
-                        {user.name}
-                        {user.isVerifiedAcademy && (
-                          <CheckCircle2 className="w-3 h-3 text-[#1877F2] fill-[#1877F2] text-white" />
-                        )}
-                      </div>
-                      <div className="text-[10px] text-[#65676B] truncate">
-                        {user.house} House • {user.role.split(' - ')[0]}
-                      </div>
-                    </div>
-                    {isActive && (
-                      <span className="text-[9px] font-extrabold text-[#1877F2] bg-white px-2 py-0.5 rounded-full shadow-2xs">
-                        Active
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <p className="text-[11px] text-[#65676B] leading-relaxed mt-1">
+              This is a fresh MFA-VEXPEX network. No demo students, teachers, posts, messages, or marketplace items are preloaded.
+              Your account appears only after you sign in with your Academy email.
+            </p>
           </div>
 
           <div className="border-t border-[#CED0D4]" />
 
-          {/* Custom MFA Email Login / Registration */}
+          {/* Academy Email Login / Registration */}
           <form onSubmit={handleDomainSubmit} className="space-y-3.5">
             <div className="font-bold text-xs text-[#050505] uppercase tracking-wider">
-              Or Sign In with Academy Credentials
+              Academy Email Sign In / Account Registration
             </div>
 
             {errorMessage && (
@@ -171,7 +133,7 @@ export const AuthModal: React.FC = () => {
                 required
               />
               <span className="text-[10px] text-[#65676B] mt-1 block">
-                Must end with @mpesafoundationacademy.ac.ke
+                Must end with @mpesafoundationacademy.ac.ke. New accounts start with an empty profile and empty feed.
               </span>
             </div>
 
@@ -233,7 +195,7 @@ export const AuthModal: React.FC = () => {
               className="w-full py-2.5 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
             >
               <UserCheck className="w-4 h-4" />
-              <span>Verify & Access MFA-VEXPEX</span>
+              <span>Sign In / Create Account</span>
             </button>
           </form>
         </div>
