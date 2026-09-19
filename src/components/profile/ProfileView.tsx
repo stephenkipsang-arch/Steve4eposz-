@@ -20,7 +20,6 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { PostCard } from '../feed/PostCard';
-import { ACADEMY_USERS } from '../../data/mockData';
 
 const COVER_OPTIONS = [
   'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
@@ -30,7 +29,7 @@ const COVER_OPTIONS = [
 ];
 
 export const ProfileView: React.FC = () => {
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, allAcademyUsers, updateProfile } = useAuth();
   const {
     selectedProfileUser,
     posts,
@@ -356,7 +355,7 @@ export const ProfileView: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              {ACADEMY_USERS.filter((u) => u.id !== selectedProfileUser.id)
+              {allAcademyUsers.filter((u) => u.id !== selectedProfileUser.id)
                 .slice(0, 6)
                 .map((peer) => (
                   <div
@@ -456,7 +455,9 @@ export const ProfileView: React.FC = () => {
                 All Academy Peers & Faculty
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {ACADEMY_USERS.map((user) => (
+                {allAcademyUsers.length === 0 ? (
+                  <p className="text-xs text-[#65676B]">No other academy accounts yet.</p>
+                ) : allAcademyUsers.map((user) => (
                   <div
                     key={user.id}
                     onClick={() => viewUserProfile(user)}
