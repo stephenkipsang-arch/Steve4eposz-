@@ -129,51 +129,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const response = await apiFetch('/api/auth/login', {
+      const userName = name || cleanEmail.split('@')[0].replace('.', ' ').replace(/\\b\\w/g, (l) => l.toUpperCase());
+      const newUser: User = normalizeGrade10User({
+        id: `user_${Date.now()}`,
+        name: userName,
+        email: cleanEmail,
+        avatar: '/Steve4eposz-/mfa-default-avatar.jpg',
+        coverImage: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
+        role: 'Student - Grade 10', house: 'Kenya', graduationYear: '2028', gradeOrDept: 'Grade 10',
+        bio: 'Grade 10 learner | M-PESA Foundation Academy', location: 'Thika Campus, Kenya',
+        isVerifiedAcademy: true, friendsCount: 0, joinedDate: 'August 2026', clubs: []
+      });
+
+      // Try account creation first. An existing email returns 409, after which we
+      // perform a real password login. This avoids a passwordless account-claim path.
+      const register = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password })
+        body: JSON.stringify({ ...newUser, password })
       });
-      const data = await response.json().catch(() => ({}));
-      if (response.ok && data?.user) {
-        const canonicalUser = normalizeGrade10User(data.user);
-        setCurrentUser(canonicalUser);
-        setAllAcademyUsers((prev) => {
-          const map = new Map(prev.filter((u) => u.email.toLowerCase() !== cleanEmail).map((u) => [u.id, u]));
-          map.set(canonicalUser.id, canonicalUser);
-          return Array.from(map.values());
-        });
-        setIsAuthenticated(true);
-        return { success: true, message: `Welcome back, ${canonicalUser.name}!` };
-      }
-      if (response.status === 404) {
-        const userName = name || cleanEmail.split('@')[0].replace('.', ' ').replace(/\\b\\w/g, (l) => l.toUpperCase());
-        const newUser: User = normalizeGrade10User({
-          id: `user_${Date.now()}`,
-          name: userName,
-          email: cleanEmail,
-          avatar: '/Steve4eposz-/mfa-default-avatar.jpg',
-          coverImage: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
-          role: 'Student - Grade 10', house: 'Kenya', graduationYear: '2028', gradeOrDept: 'Grade 10',
-          bio: 'Grade 10 learner | M-PESA Foundation Academy', location: 'Thika Campus, Kenya',
-          isVerifiedAcademy: true, friendsCount: 0, joinedDate: 'August 2026', clubs: []
-        });
-        const register = await apiFetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...newUser, password })
-        });
-        const registerData = await register.json().catch(() => ({}));
-        if (!register.ok || !registerData?.user) {
-          return { success: false, message: registerData?.error || 'Could not create the Academy account.' };
-        }
+      const registerData = await register.json().catch(() => ({}));
+      if (register.ok && registerData?.user) {
         const canonicalUser = normalizeGrade10User(registerData.user);
         setCurrentUser(canonicalUser);
         setAllAcademyUsers((prev) => [...prev.filter((u) => u.email.toLowerCase() !== cleanEmail), canonicalUser]);
         setIsAuthenticated(true);
         return { success: true, message: `Account created for ${canonicalUser.name}.` };
       }
-      return { success: false, message: data?.error || 'Invalid Academy email or password.' };
+      if (register.status !== 409) {
+        return { success: false, message: registerData?.error || 'Could not create the Academy account.' };
+      }
+
+      const response = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.user) {
+        return { success: false, message: data?.error || 'Invalid Academy email or password.' };
+      }
+
+      const canonicalUser = normalizeGrade10User(data.user);
+      setCurrentUser(canonicalUser);
+      setAllAcademyUsers((prev) => {
+        const map = new Map(prev.filter((u) => u.email.toLowerCase() !== cleanEmail).map((u) => [u.id, u]));
+        map.set(canonicalUser.id, canonicalUser);
+        return Array.from(map.values());
+      });
+      setIsAuthenticated(true);
+      return { success: true, message: `Welcome back, ${canonicalUser.name}!` };
     } catch {
       return { success: false, message: 'Could not reach the MFA-VEXPEX account server. Please try again.' };
     }
