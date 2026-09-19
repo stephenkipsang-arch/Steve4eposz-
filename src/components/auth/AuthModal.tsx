@@ -29,15 +29,18 @@ export const AuthModal: React.FC = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    const res = loginWithAcademyEmail(emailInput, nameInput);
-    if (res.success) {
-      setSuccessMessage(res.message);
-      setTimeout(() => {
-        setIsAuthModalOpen(false);
-      }, 1000);
-    } else {
-      setErrorMessage(res.message);
-    }
+    void loginWithAcademyEmail(emailInput, nameInput).then((res) => {
+      if (res.success) {
+        setSuccessMessage(res.message);
+        setTimeout(() => {
+          setIsAuthModalOpen(false);
+        }, 1000);
+      } else {
+        setErrorMessage(res.message);
+      }
+    }).catch(() => {
+      setErrorMessage('Could not reach the MFA-VEXPEX account server. Please try again.');
+    });
   };
 
   return (
