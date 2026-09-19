@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '1mb' }));
 
 function freshDb() {
-  return { version: DB_VERSION, users: [], messages: [] };
+  return { version: DB_VERSION, users: [], messages: [], lostFound: [] };
 }
 
 function loadDb() {
@@ -35,7 +35,8 @@ function loadDb() {
     return {
       version: DB_VERSION,
       users: Array.isArray(db.users) ? db.users : [],
-      messages: Array.isArray(db.messages) ? db.messages : []
+      messages: Array.isArray(db.messages) ? db.messages : [],
+      lostFound: Array.isArray(db.lostFound) ? db.lostFound : []
     };
   } catch {
     return freshDb();
@@ -45,7 +46,7 @@ function loadDb() {
 function saveDb(db) {
   fs.writeFileSync(
     DB_FILE,
-    JSON.stringify({ version: DB_VERSION, users: db.users || [], messages: db.messages || [] }, null, 2)
+    JSON.stringify({ version: DB_VERSION, users: db.users || [], messages: db.messages || [], lostFound: db.lostFound || [] }, null, 2)
   );
 }
 
@@ -108,6 +109,48 @@ app.patch('/api/users/:userId/presence', (req, res) => {
   };
   saveDb(db);
   res.json({ user: withFreshPresence(db.users[index]) });
+});
+
+app.get('/api/lost-found', (_req, res) => {
+  const db = loadDb();
+  res.json({ items: [...(db.lostFound || [])].reverse() });
+});
+
+app.post('/api/lost-found', (req, res) => {
+  const { kind, item, details, location, reporterId, reporterName, reporterAvatar } = req.body || {};
+  if (!['lost', 'found'].includes(kind) || !String(item || '').trim() || !reporterId || !reporterName) {
+    return res.status(400).json({ error: 'kind, item, reporterId and reporterName are required' });
+  }
+
+  const db = loadDb();
+  db.lostFound = Array.isArray(db.lostFound) ? db.lostFound : [];
+  const entry = {
+    id: `lost_found_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    kind,
+    item: String(item).trim().slice(0, 120),
+    details: String(details || '').trim().slice(0, 500),
+    location: String(location || '').trim().slice(0, 120),
+    reporterId: String(reporterId),
+    reporterName: String(reporterName).trim(),
+    reporterAvatar: String(reporterAvatar || ''),
+    timestamp: new Date().toISOString(),
+    resolved: false
+  };
+  db.lostFound.push(entry);
+  saveDb(db);
+  res.status(201).json({ item: entry });
+});
+
+app.patch('/api/lost-found/:itemId', (req, res) => {
+  const db = loadDb();
+  const index = (db.lostFound || []).findIndex((item) => item.id === req.params.itemId);
+  if (index < 0) return res.status(404).json({ error: 'Lost & found entry not found' });
+  if (String(db.lostFound[index].reporterId) !== String(req.body?.reporterId)) {
+    return res.status(403).json({ error: 'Only the person who posted this entry can update it' });
+  }
+  db.lostFound[index] = { ...db.lostFound[index], resolved: Boolean(req.body?.resolved) };
+  saveDb(db);
+  res.json({ item: db.lostFound[index] });
 });
 
 app.get('/api/messages', (req, res) => {
