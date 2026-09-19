@@ -57,6 +57,7 @@ export const CreateReelModal: React.FC = () => {
             }
           } catch {}
           throw new Error(detail || 'The Reel could not be uploaded. Please try again.');
+        }
         const data = await response.json();
         finalUrl = apiUrl(data.url);
       }
