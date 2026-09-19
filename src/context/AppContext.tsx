@@ -205,28 +205,28 @@ const normalizeStoredReels = (value: unknown): Reel[] => {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('feed');
   const [selectedProfileUser, setSelectedProfileUser] = useState<User>(currentUser);
   const [feedFilter, setFeedFilter] = useState<'all' | 'my_house' | 'academic' | 'leadership' | 'announcements'>('all');
 
   // Posts State
   const [posts, setPosts] = useState<Post[]>(() => {
-    const storedPosts = getStoredItem<unknown>('mfa_vexpex_posts_v3', INITIAL_POSTS);
+    const storedPosts = getStoredItem<unknown>('mfa_vexpex_posts_v4', []);
     return normalizeStoredPosts(storedPosts);
   });
 
   const [savedPostIds, setSavedPostIds] = useState<string[]>(() => {
-    return getStoredItem<string[]>('mfa_vexpex_saved_posts_v2', ['post_1']);
+    return getStoredItem<string[]>('mfa_vexpex_saved_posts_v3', []);
   });
 
   // Stories State
-  const [stories, setStories] = useState<Story[]>(INITIAL_STORIES);
+  const [stories, setStories] = useState<Story[]>([]);
   const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
 
   // Reels & Shorts State
   const [reels, setReels] = useState<Reel[]>(() => {
-    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v3', INITIAL_REELS);
+    const storedReels = getStoredItem<unknown>('mfa_vexpex_reels_v4', []);
     return normalizeStoredReels(storedReels);
   });
   const [activeReelIndex, setActiveReelIndex] = useState<number>(0);
@@ -235,54 +235,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Marketplace State
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(() => {
-    return getStoredItem<MarketplaceItem[]>('mfa_vexpex_market_v2', INITIAL_MARKETPLACE);
+    return getStoredItem<MarketplaceItem[]>('mfa_vexpex_market_v3', []);
   });
   const [marketplaceFilterCategory, setMarketplaceFilterCategory] = useState<string>('All');
 
   // Events State
-  const [events, setEvents] = useState<CampusEvent[]>(INITIAL_EVENTS);
+  const [events, setEvents] = useState<CampusEvent[]>([]);
 
   // Houses State
   const [houses, setHouses] = useState<HouseStats[]>(HOUSES_DATA);
   const [selectedHouse, setSelectedHouse] = useState<House | null>(null);
 
   // Messenger State
-  const [chatThreads, setChatThreads] = useState<ChatThread[]>(INITIAL_CHATS);
+  const [chatThreads, setChatThreads] = useState<ChatThread[]>([]);
   const [openChatWindows, setOpenChatWindows] = useState<OpenChatWindow[]>([]);
-  const [messages, setMessages] = useState<Record<string, Message[]>>({
-    chat_joy: [
-      { id: 'm1', senderId: 'user_joy', receiverId: 'user_stephen', text: 'Hey Stephen! How is the IB physics essay coming along?', timestamp: '2:15 PM', read: true },
-      { id: 'm2', senderId: 'user_stephen', receiverId: 'user_joy', text: 'Hey Joy! Just finished the circuit diagram draft. Let us check the PID motor calibration values in Lab 2 tomorrow at lunch break.', timestamp: '2:30 PM', read: true }
-    ],
-    chat_david: [
-      { id: 'm3', senderId: 'user_david', receiverId: 'user_stephen', text: 'Great job supporting the scrum line today Stephen! Mara pride 🦁', timestamp: '1:00 PM', read: true }
-    ]
-  });
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
 
   // Notifications State
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Modals & UI
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [isCreateStoryOpen, setIsCreateStoryOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(!isAuthenticated);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Persist state safely
   useEffect(() => {
-    setStoredItem('mfa_vexpex_posts_v3', posts);
+    setStoredItem('mfa_vexpex_posts_v4', posts);
   }, [posts]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_saved_posts_v2', savedPostIds);
+    setStoredItem('mfa_vexpex_saved_posts_v3', savedPostIds);
   }, [savedPostIds]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_market_v2', marketplaceItems);
+    setStoredItem('mfa_vexpex_market_v3', marketplaceItems);
   }, [marketplaceItems]);
 
   useEffect(() => {
-    setStoredItem('mfa_vexpex_reels_v3', reels);
+    setStoredItem('mfa_vexpex_reels_v4', reels);
   }, [reels]);
 
   const viewUserProfile = (user: User) => {
