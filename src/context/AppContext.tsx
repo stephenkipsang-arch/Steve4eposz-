@@ -18,7 +18,7 @@ import { CURRENT_USER, ACADEMY_USERS } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
 
-export type ActiveTab = 'feed' | 'reels' | 'arena-ai' | 'marketplace' | 'events' | 'profile' | 'saved' | 'directory';
+export type ActiveTab = 'feed' | 'reels' | 'arena-ai' | 'lost-found' | 'marketplace' | 'events' | 'profile' | 'saved' | 'directory';
 
 interface OpenChatWindow {
   threadId: string;
@@ -242,6 +242,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (!isAuthenticated) setIsAuthModalOpen(true);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (selectedProfileUser.id === currentUser.id) setSelectedProfileUser(currentUser);
+  }, [currentUser, selectedProfileUser.id]);
 
   // Persist state safely
   useEffect(() => {
