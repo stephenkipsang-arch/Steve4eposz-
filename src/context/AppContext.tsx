@@ -264,7 +264,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated) setIsAuthModalOpen(true);
+    // Authentication owns the modal lifecycle: unauthenticated users must sign in,
+    // while a restored or newly-created session should never be left behind the modal.
+    setIsAuthModalOpen(!isAuthenticated);
   }, [isAuthenticated]);
 
   useEffect(() => {
