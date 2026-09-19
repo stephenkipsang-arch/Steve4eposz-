@@ -82,9 +82,11 @@ export const CreateReelModal: React.FC = () => {
     try {
       let finalVideoUrl = videoUrl;
       if (file) {
-        const form = new FormData();
-        form.append('video', file);
-        const upload = await apiFetch('/api/reels/upload', { method: 'POST', body: form });
+        const upload = await apiFetch('/api/reels/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+          body: file
+        });
         if (!upload.ok) throw new Error('upload failed');
         const data = await upload.json();
         finalVideoUrl = data.url;
