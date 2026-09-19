@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, House, UserRole } from '../types';
+import { User } from '../types';
 import { CURRENT_USER, ACADEMY_USERS } from '../data/mockData';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
 import { apiFetch } from '../utils/api';
@@ -8,17 +8,17 @@ interface AuthContextType {
   currentUser: User;
   allAcademyUsers: User[];
   isAuthenticated: boolean;
-  loginWithAcademyEmail: (email: string, name?: string, house?: House, role?: UserRole) => { success: boolean; message: string };
+  loginWithAcademyEmail: (email: string, name?: string) => { success: boolean; message: string };
   switchUser: (userId: string) => void;
   updateProfile: (updatedFields: Partial<User>) => void;
   logout: () => void;
   isDomainValid: (email: string) => boolean;
-  activeHouse: House;
+  
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const LOCAL_STORAGE_USER_KEY = 'mfa_vexpex_current_user_v3';
-const LOCAL_STORAGE_ALL_USERS_KEY = 'mfa_vexpex_all_users_v3';
+const LOCAL_STORAGE_USER_KEY = 'mfa_vexpex_current_user_v4';
+const LOCAL_STORAGE_ALL_USERS_KEY = 'mfa_vexpex_all_users_v4';
 const LOCAL_STORAGE_AUTH_KEY = 'mfa_vexpex_authenticated_v1';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -90,9 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithAcademyEmail = (
     email: string,
-    name?: string,
-    house: House = 'Kenya',
-    role: UserRole = 'Student - IB DP2'
+    name?: string
   ): { success: boolean; message: string } => {
     const cleanEmail = email.trim().toLowerCase();
     if (!isDomainValid(cleanEmail)) {
@@ -113,11 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: cleanEmail,
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
       coverImage: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
-      role,
-      house,
-      graduationYear: '2026',
-      gradeOrDept: role.includes('Staff') ? 'Academic Faculty' : 'IB DP Year 2',
-      bio: `${house} House Member | M-PESA Foundation Academy`,
+      role: 'Student - Grade 10',
+      house: 'Kenya',
+      graduationYear: '2028',
+      gradeOrDept: 'Grade 10',
+      bio: 'Grade 10 learner | M-PESA Foundation Academy',
       location: 'Thika Campus, Kenya',
       isVerifiedAcademy: true,
       friendsCount: 0,
@@ -150,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, allAcademyUsers, isAuthenticated, loginWithAcademyEmail, switchUser, updateProfile, logout, isDomainValid, activeHouse: currentUser.house }}>
+    <AuthContext.Provider value={{ currentUser, allAcademyUsers, isAuthenticated, loginWithAcademyEmail, switchUser, updateProfile, logout, isDomainValid }}>
       {children}
     </AuthContext.Provider>
   );
