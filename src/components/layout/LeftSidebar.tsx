@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Film, BrainCircuit, Store, Calendar, Bookmark, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { Home, Film, BrainCircuit, Store, Calendar, Bookmark, GraduationCap, CheckCircle2, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 
@@ -7,7 +7,7 @@ export const LeftSidebar: React.FC = () => {
   const { currentUser } = useAuth();
   const { activeTab, setActiveTab, viewUserProfile, setFeedFilter, savedPostIds } = useApp();
 
-  const item = (tab: 'feed' | 'reels' | 'arena-ai' | 'marketplace' | 'events', label: string, icon: React.ReactNode) => (
+  const item = (tab: 'feed' | 'reels' | 'arena-ai' | 'lost-found' | 'marketplace' | 'events', label: string, icon: React.ReactNode) => (
     <button
       onClick={() => setActiveTab(tab)}
       className={`w-full flex items-center gap-3 p-2 rounded-xl transition-colors text-left text-sm font-semibold ${activeTab === tab ? 'bg-[#FFF8E1] text-[#8A6800]' : 'text-[#050505] hover:bg-[#F0F2F5]'}`}
@@ -38,6 +38,7 @@ export const LeftSidebar: React.FC = () => {
         {item('arena-ai', 'Arena AI', <BrainCircuit className="w-5 h-5" />)}
         {item('marketplace', 'Campus Store', <Store className="w-5 h-5" />)}
         {item('events', 'Academy Calendar', <Calendar className="w-5 h-5" />)}
+        {item('lost-found', 'Lost & Found', <Search className="w-5 h-5" />)}
 
         <button
           onClick={() => { setActiveTab('feed'); setFeedFilter('announcements'); }}
