@@ -10,6 +10,7 @@ import { MarketplaceView } from './components/marketplace/MarketplaceView';
 import { EventsView } from './components/events/EventsView';
 import { ProfileView } from './components/profile/ProfileView';
 import { ReelsView } from './components/reels/ReelsView';
+import { LostFound } from './components/lostfound/LostFound';
 import { CreatePostModal } from './components/feed/CreatePostModal';
 import { CreateStoryModal } from './components/feed/CreateStoryModal';
 import { CreateReelModal } from './components/reels/CreateReelModal';
@@ -34,6 +35,7 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 min-w-0 pb-16 md:pb-8">
           {activeTab === 'feed' && <FeedView />}
           {activeTab === 'reels' && <ReelsView />}
+          {activeTab === 'lost-found' && <LostFound />}
           {activeTab === 'arena-ai' && <ArenaAI />}
           {activeTab === 'marketplace' && <MarketplaceView />}
           {activeTab === 'events' && <EventsView />}
