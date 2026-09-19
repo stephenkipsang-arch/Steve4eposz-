@@ -12,50 +12,11 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { apiFetch } from '../../utils/api';
+import { apiFetch } from '../../utils/api';
 
-const SAMPLE_CAMPUS_FOOTAGE = [
-  {
-    title: 'Drone & Autonomous Flight Test',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    poster: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80',
-    suggestedAudio: 'Robotics Lab Beats • Tech Hub Original',
-    suggestedHouse: 'Academy' as House,
-    tags: ['#Robotics', '#STEM', '#Academy']
-  },
-  {
-    title: 'Inter-House Rugby Sevens Match',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
-    poster: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&q=80',
-    suggestedAudio: 'Stadium Crowds & Derby Day Chants 🏉',
-    
-    tags: ['#Rugby', '#AcademyHouse', '#InterHouse']
-  },
-  {
-    title: 'Symphony Strings & African Folk',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    poster: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=600&q=80',
-    suggestedAudio: 'MFA Symphony Orchestra - Vivaldi x Nyatiti',
-    suggestedHouse: 'Academy' as House,
-    tags: ['#Orchestra', '#Academy', '#ArtsGala']
-  },
-  {
-    title: 'Chemistry Lab Flame Spectroscopy',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-    poster: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=600&q=80',
-    suggestedAudio: 'Lo-Fi Study Beats • Chemistry Lab',
-    
-    tags: ['#Grade10', '#Learning']
-  },
-  {
-    title: 'Green Academy Conservation Drive',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
-    poster: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80',
-    suggestedAudio: 'Morning Ambience & Campus Anthem',
-    suggestedHouse: 'Academy' as House,
-    tags: ['#Academy', '#GreenCampus', '#VEXPEX']
-  }
-];
-
+const SAMPLE_CAMPUS_FOOTAGE: Array<{title:string;url:string;poster:string;suggestedAudio:string;tags:string[]}> = [];
+ 
 const SUGGESTED_HASHTAGS = [
   '#Grade10',
   '#Robotics',
@@ -76,12 +37,12 @@ export const CreateReelModal: React.FC = () => {
   const { isCreateReelOpen, setIsCreateReelOpen, addReel } = useApp();
   const { currentUser } = useAuth();
 
-  const [inputMode, setInputMode] = useState<'sample' | 'upload' | 'url'>('sample');
-  const [videoUrl, setVideoUrl] = useState<string>(SAMPLE_CAMPUS_FOOTAGE[0].url);
-  const [posterUrl, setPosterUrl] = useState<string>(SAMPLE_CAMPUS_FOOTAGE[0].poster);
+  const [inputMode, setInputMode] = useState<'upload' | 'url'>('upload');
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [posterUrl, setPosterUrl] = useState<string>('');
   const [caption, setCaption] = useState<string>('');
-  const [audioTrack, setAudioTrack] = useState<string>(SAMPLE_CAMPUS_FOOTAGE[0].suggestedAudio);
-  const [houseTag, setHouseTag] = useState<House | 'All Academy'>(currentUser.house);
+  const [audioTrack, setAudioTrack] = useState<string>('Original Audio');
+  const [houseTag, setHouseTag] = useState<'All Academy'>('All Academy');
   const [location, setLocation] = useState<string>(CAMPUS_LOCATIONS[0]);
   const [tags, setTags] = useState<string[]>(['#MFA', '#VEXPEX']);
 
@@ -97,12 +58,16 @@ export const CreateReelModal: React.FC = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const localBlobUrl = URL.createObjectURL(file);
-      setVideoUrl(localBlobUrl);
-      setPosterUrl('');
-      setAudioTrack(`Original Audio • ${currentUser.name.split(' ')[0]}`);
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      window.alert('Please choose a video under 50 MB.');
+      return;
     }
+    const localUrl = URL.createObjectURL(file);
+    setVideoUrl(localUrl);
+    setPosterUrl('');
+    setAudioTrack(`Original Audio • ${currentUser.name.split(' ')[0]}`);
+    (window as any).__mfaReelFile = file;
   };
 
   const handleToggleTag = (tag: string) => {
@@ -111,23 +76,28 @@ export const CreateReelModal: React.FC = () => {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!videoUrl) return;
-
-    addReel(
-      videoUrl,
-      caption.trim() || 'Exciting highlights from M-PESA Foundation Academy! ✨🎥',
-      audioTrack.trim() || `Original Audio • ${currentUser.name}`,
-      houseTag,
-      location,
-      tags,
-      posterUrl || undefined
-    );
-
-    // Reset & close
-    setCaption('');
-    setIsCreateReelOpen(false);
+    const file = (window as any).__mfaReelFile as File | undefined;
+    try {
+      let finalVideoUrl = videoUrl;
+      if (file) {
+        const form = new FormData();
+        form.append('video', file);
+        const upload = await apiFetch('/api/reels/upload', { method: 'POST', body: form });
+        if (!upload.ok) throw new Error('upload failed');
+        const data = await upload.json();
+        finalVideoUrl = data.url;
+      }
+      if (!finalVideoUrl) return;
+      addReel(finalVideoUrl, caption.trim() || 'Grade 10 campus short 🎥', audioTrack.trim() || `Original Audio • ${currentUser.name}`, 'All Academy', location, tags, posterUrl || undefined);
+      (window as any).__mfaReelFile = undefined;
+      setCaption('');
+      setVideoUrl('');
+      setIsCreateReelOpen(false);
+    } catch {
+      window.alert('The video could not be uploaded. Please try again with a video under 50 MB.');
+    }
   };
 
   return (
@@ -144,58 +114,7 @@ export const CreateReelModal: React.FC = () => {
               <p className="text-[11px] text-[#B0B3B8]">Share vertical video moments with the student community</p>
             </div>
           </div>
-          <button
-            onClick={() => setIsCreateReelOpen(false)}
-            className="w-8 h-8 rounded-full bg-[#3A3B3C] hover:bg-[#4E4F50] flex items-center justify-center text-[#B0B3B8] hover:text-white transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-4 overflow-y-auto space-y-4 flex-1 scrollbar-thin">
-          {/* Video Preview & Source Selector */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-[#E4E6EB] flex items-center justify-between">
-              <span>1. Choose Video Source</span>
-              <span className="text-[11px] text-[#1877F2] font-normal">HD 1080p Support</span>
-            </label>
-
-            {/* Source Mode Tabs */}
-            <div className="flex rounded-lg bg-[#242526] p-1 gap-1 border border-[#3A3B3C]">
-              <button
-                type="button"
-                onClick={() => setInputMode('sample')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  inputMode === 'sample'
-                    ? 'bg-[#1877F2] text-white shadow-xs'
-                    : 'text-[#B0B3B8] hover:text-white'
-                }`}
-              >
-                Campus Footage
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMode('upload')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  inputMode === 'upload'
-                    ? 'bg-[#1877F2] text-white shadow-xs'
-                    : 'text-[#B0B3B8] hover:text-white'
-                }`}
-              >
-                Upload File
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMode('url')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${
-                  inputMode === 'url'
-                    ? 'bg-[#1877F2] text-white shadow-xs'
-                    : 'text-[#B0B3B8] hover:text-white'
-                }`}
-              >
-                Video Link
-              </button>
+          <button type="button" onClick={() => setInputMode('url')} className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer ${inputMode === 'url' ? 'bg-[#1877F2] text-white' : 'text-[#B0B3B8]'}`}>Video Link</button>
             </div>
 
             {/* Mode 1: Preset Footage Cards */}
@@ -319,39 +238,14 @@ export const CreateReelModal: React.FC = () => {
             />
           </div>
 
-          {/* House Channel & Location */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#E4E6EB]">House Channel</label>
-              <select
-                value={houseTag}
-                onChange={(e) => setHouseTag(e.target.value as any)}
-                className="w-full bg-[#242526] text-xs text-white px-3 py-2 rounded-xl border border-[#3A3B3C] focus:outline-hidden focus:border-[#1877F2] cursor-pointer"
-              >
-                <option value="All Academy">🌐 All Academy</option>
-                <option value="Academy">🦁 Academy House</option>
-                <option value="Academy">🏔️ Academy House</option>
-                <option value="Academy">🦅 Academy House</option>
-                <option value="Academy">🦏 Academy House</option>
-              </select>
+              <label className="text-xs font-bold text-[#E4E6EB]">Audience</label>
+              <div className="w-full bg-[#242526] text-xs text-white px-3 py-2 rounded-xl border border-[#3A3B3C]">Grade 10 • All Academy</div>
             </div>
-
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#E4E6EB] flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-[#FA383E]" />
-                Campus Location
-              </label>
-              <select
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-[#242526] text-xs text-white px-3 py-2 rounded-xl border border-[#3A3B3C] focus:outline-hidden focus:border-[#1877F2] cursor-pointer"
-              >
-                {CAMPUS_LOCATIONS.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
-                ))}
-              </select>
+              <label className="text-xs font-bold text-[#E4E6EB] flex items-center gap-1"><MapPin className="w-3 h-3 text-[#FA383E]" /> Campus Location</label>
+              <select value={location} onChange={(e) => setLocation(e.target.value)} className="w-full bg-[#242526] text-xs text-white px-3 py-2 rounded-xl border border-[#3A3B3C]">{CAMPUS_LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}</select>
             </div>
           </div>
 
