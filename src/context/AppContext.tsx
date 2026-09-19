@@ -260,6 +260,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(!isAuthenticated);
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    if (!isAuthenticated) setIsAuthModalOpen(true);
+  }, [isAuthenticated]);
+
   // Persist state safely
   useEffect(() => {
     setStoredItem('mfa_vexpex_posts_v4', posts);
