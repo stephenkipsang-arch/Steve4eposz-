@@ -8,6 +8,8 @@ const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const DB_FILE = path.join(__dirname, 'mfa-data.json');
 const DB_VERSION = 2;
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 app.use((req, res, next) => {
   const allowedOrigin = process.env.FRONTEND_ORIGIN || '*';
@@ -17,6 +19,23 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+app.use('/uploads', express.static(UPLOAD_DIR));
+
+app.post('/api/reels/upload', express.raw({ type: ['video/*', 'application/octet-stream'], limit: '50mb' }), (req, res) => {
+  const contentType = String(req.headers['content-type'] || '');
+  if (!contentType.startsWith('video/') && contentType !== 'application/octet-stream') {
+    return res.status(415).json({ error: 'Send a video file' });
+  }
+  const body = req.body;
+  if (!Buffer.isBuffer(body) || body.length === 0) {
+    return res.status(400).json({ error: 'Empty video upload' });
+  }
+  const extension = contentType.includes('webm') ? 'webm' : contentType.includes('quicktime') ? 'mov' : 'mp4';
+  const filename = `reel_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${extension}`;
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), body);
+  res.status(201).json({ url: `/uploads/${filename}` });
+});
+
 app.use(express.json({ limit: '1mb' }));
 
 function freshDb() {
