@@ -427,7 +427,7 @@ export const ReelsView: React.FC = () => {
                 <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
                   {/* House Pill */}
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold border border-white/10">
-                    <span>{getHouseBadge('Grade 10').emoji}</span>
+                    <span>🎓</span>
                     <span>{'Grade 10'}</span>
                   </div>
 
@@ -464,7 +464,7 @@ export const ReelsView: React.FC = () => {
                           className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform"
                         />
                         <span className="absolute -bottom-1 -right-1 text-[10px]">
-                          {getHouseBadge(currentReel.author.house).emoji}
+                          🎓
                         </span>
                       </div>
                       <div>
@@ -744,7 +744,7 @@ export const ReelsView: React.FC = () => {
       {viewMode === 'grid' && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {filteredReels.map((reel, index) => {
-            const badge = getHouseBadge(reel.houseTag);
+            const badge = { emoji: '🎓', name: 'Grade 10' };
             return (
               <div
                 key={reel.id}
