@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Edit, GraduationCap, Mail, MapPin, MessageCircle, UserPlus, BrainCircuit } from 'lucide-react';
+import { CheckCircle2, Edit, GraduationCap, Mail, MapPin, MessageCircle, UserPlus, BrainCircuit, Camera } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { PostCard } from '../feed/PostCard';
@@ -10,9 +10,48 @@ export const ProfileView: React.FC = () => {
   const { selectedProfileUser, openChatWithUser, setIsCreatePostOpen, posts } = useApp();
   const [bioInput, setBioInput] = useState(selectedProfileUser.bio);
   const [editing, setEditing] = useState(false);
+  const [avatarSaving, setAvatarSaving] = useState(false);
   const isMe = selectedProfileUser.id === currentUser.id;
 
   const userPosts = posts.filter((post) => post.author.id === selectedProfileUser.id);
+
+  const resizeImage = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read image'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 512;
+          const scale = Math.min(1, max / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error('Could not process image'));
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => reject(new Error('Invalid image'));
+        img.src = String(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !isMe) return;
+    try {
+      setAvatarSaving(true);
+      const avatar = await resizeImage(file);
+      updateProfile({ avatar });
+    } catch {
+      window.alert('That photo could not be used. Please choose an image from Photos or Files.');
+    } finally {
+      setAvatarSaving(false);
+    }
+  };
 
   const saveBio = () => {
     updateProfile({ bio: bioInput.trim() || 'Grade 10 learner | M-PESA Foundation Academy' });
@@ -26,7 +65,15 @@ export const ProfileView: React.FC = () => {
         <div className="px-5 sm:px-8 pb-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 -mt-12 sm:-mt-16">
             <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-              <img src={selectedProfileUser.avatar} alt={selectedProfileUser.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-lg bg-white" />
+              <div className="relative shrink-0">
+                <img src={selectedProfileUser.avatar} alt={selectedProfileUser.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-lg bg-white" />
+                {isMe && (
+                  <label className="absolute bottom-1 right-1 w-10 h-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center border-4 border-white cursor-pointer shadow-md" title="Change profile photo">
+                    <Camera className="w-4 h-4" />
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarSaving} />
+                  </label>
+                )}
+              </div>
               <div>
                 <h1 className="text-2xl font-black flex items-center justify-center sm:justify-start gap-1.5">
                   {selectedProfileUser.name}
@@ -41,6 +88,10 @@ export const ProfileView: React.FC = () => {
               <div className="flex gap-2">
                 <button onClick={() => setIsCreatePostOpen(true)} className="px-4 py-2 rounded-xl bg-[#1877F2] text-white text-xs font-bold">Create Post</button>
                 <button onClick={() => setEditing(true)} className="px-4 py-2 rounded-xl bg-[#F0F2F5] text-xs font-bold flex items-center gap-1.5"><Edit className="w-4 h-4" /> Edit</button>
+                <label className="px-4 py-2 rounded-xl bg-[#FFF8E1] text-[#8A6800] text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                  <Camera className="w-4 h-4" /> {avatarSaving ? 'Saving…' : 'Change Photo'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarSaving} />
+                </label>
               </div>
             ) : (
               <button onClick={() => openChatWithUser(selectedProfileUser)} className="px-4 py-2 rounded-xl bg-[#1877F2] text-white text-xs font-bold flex items-center gap-1.5"><MessageCircle className="w-4 h-4" /> Message</button>
