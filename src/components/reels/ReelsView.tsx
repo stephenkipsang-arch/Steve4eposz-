@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import { House, Reel } from '../../types';
+import { Reel } from '../../types';
 
 export const ReelsView: React.FC = () => {
   const {
@@ -37,9 +37,7 @@ export const ReelsView: React.FC = () => {
     addReelComment,
     likeReelComment,
     setIsCreateReelOpen,
-    viewUserProfile,
-    reelsHouseFilter,
-    setReelsHouseFilter
+    viewUserProfile
   } = useApp();
   const { currentUser } = useAuth();
 
@@ -62,10 +60,7 @@ export const ReelsView: React.FC = () => {
   const progressBarRef = useRef<HTMLDivElement | null>(null);
 
   // Filtered Reels
-  const filteredReels = reels.filter((r) => {
-    if (reelsHouseFilter === 'All') return true;
-    return r.houseTag === reelsHouseFilter;
-  });
+  const filteredReels = reels;
 
   const currentReel: Reel | undefined = filteredReels[activeReelIndex] || filteredReels[0] || reels[0];
 
@@ -109,7 +104,7 @@ export const ReelsView: React.FC = () => {
           });
       }
     }
-  }, [activeReelIndex, viewMode, reelsHouseFilter, currentReel?.id, currentReel?.videoUrl]);
+  }, [activeReelIndex, viewMode, currentReel?.id, currentReel?.videoUrl]);
 
   // Keyboard navigation (Arrow keys up/down, space for play/pause, m for mute)
   useEffect(() => {
@@ -244,21 +239,6 @@ export const ReelsView: React.FC = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const getHouseBadge = (house: House | 'All Academy') => {
-    switch (house) {
-      case 'Kenya':
-        return { emoji: '🦁', color: 'bg-[#DC2626] text-white', border: 'border-[#DC2626]' };
-      case 'Kilimanjaro':
-        return { emoji: '🏔️', color: 'bg-[#0284C7] text-white', border: 'border-[#0284C7]' };
-      case 'Longonot':
-        return { emoji: '🦅', color: 'bg-[#059669] text-white', border: 'border-[#059669]' };
-      case 'Elgon':
-        return { emoji: '🦏', color: 'bg-[#D97706] text-white', border: 'border-[#D97706]' };
-      default:
-        return { emoji: '🌐', color: 'bg-[#1877F2] text-white', border: 'border-[#1877F2]' };
-    }
-  };
-
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 py-4 select-none">
       {/* Toast Notification */}
@@ -328,44 +308,18 @@ export const ReelsView: React.FC = () => {
         </div>
       </div>
 
-      {/* House Filter Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-4 scrollbar-none">
-        {(['All', 'Kenya', 'Kilimanjaro', 'Longonot', 'Elgon'] as const).map((house) => {
-          const isSelected = reelsHouseFilter === house;
-          const emoji =
-            house === 'Kenya'
-              ? '🦁'
-              : house === 'Kilimanjaro'
-              ? '🏔️'
-              : house === 'Longonot'
-              ? '🦅'
-              : house === 'Elgon'
-              ? '🦏'
-              : '🌐';
-
-          return (
-            <button
-              key={house}
-              onClick={() => {
-                setReelsHouseFilter(house);
-                setActiveReelIndex(0);
-              }}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer border ${
-                isSelected
-                  ? 'bg-[#050505] text-white border-[#050505] shadow-xs'
-                  : 'bg-white text-[#65676B] hover:bg-[#F0F2F5] hover:text-[#050505] border-[#CED0D4]'
-              }`}
-            >
-              <span>{emoji}</span>
-              <span>{house === 'All' ? 'All Academy' : `${house} House`}</span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* ========================================================================= */}
       {/* MODE 1: IMMERSIVE STREAM PLAYER */}
       {/* ========================================================================= */}
+      {viewMode === 'player' && filteredReels.length === 0 && (
+        <div className="max-w-[420px] mx-auto min-h-[60vh] rounded-3xl bg-[#07111F] border border-[#D4AF37] flex flex-col items-center justify-center p-8 text-center text-white shadow-2xl">
+          <Film className="w-14 h-14 text-[#D4AF37] mb-4" />
+          <h2 className="text-xl font-black">No Reels or Shorts yet</h2>
+          <p className="text-sm text-white/70 mt-2">Be the first Grade 10 learner to post a short video.</p>
+          <button onClick={() => setIsCreateReelOpen(true)} className="mt-5 px-5 py-3 rounded-xl bg-[#D4AF37] text-[#07111F] font-black text-sm flex items-center gap-2"><Plus className="w-4 h-4" /> Post a Reel / Short</button>
+        </div>
+      )}
+
       {viewMode === 'player' && (
         <div className="relative flex justify-center items-start gap-4">
           {/* Main Reel Card Container (Phone / Reel aspect ratio) */}
@@ -473,8 +427,8 @@ export const ReelsView: React.FC = () => {
                 <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
                   {/* House Pill */}
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold border border-white/10">
-                    <span>{getHouseBadge(currentReel.houseTag).emoji}</span>
-                    <span>{currentReel.houseTag}</span>
+                    <span>{getHouseBadge('Grade 10').emoji}</span>
+                    <span>{'Grade 10'}</span>
                   </div>
 
                   {/* Audio Mute / Unmute Button */}
