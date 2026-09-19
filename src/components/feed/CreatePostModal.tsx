@@ -186,18 +186,9 @@ export const CreatePostModal: React.FC = () => {
                 )}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
-                {/* Audience / House selector */}
-                <select
-                  value={houseTag}
-                  onChange={(e) => setHouseTag(e.target.value as any)}
-                  className="text-[11px] font-semibold text-[#050505] bg-[#E4E6EB] px-2 py-0.5 rounded-md border-0 focus:ring-1 focus:ring-[#1877F2] cursor-pointer"
-                >
-                  <option value="All Academy">🌐 All Academy</option>
-                  <option value="Kenya">🦁 Kenya House</option>
-                  <option value="Kilimanjaro">🏔️ Kilimanjaro House</option>
-                  <option value="Longonot">🦅 Longonot House</option>
-                  <option value="Elgon">🦏 Elgon House</option>
-                </select>
+                <span className="text-[11px] font-semibold text-[#050505] bg-[#E4E6EB] px-2 py-0.5 rounded-md">
+                  🎓 Grade 10 · All Academy
+                </span>
 
                 {location && (
                   <span className="text-[11px] text-[#65676B] truncate max-w-36">
