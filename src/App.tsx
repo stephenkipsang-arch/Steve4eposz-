@@ -5,7 +5,7 @@ import { Navbar } from './components/layout/Navbar';
 import { LeftSidebar } from './components/layout/LeftSidebar';
 import { RightSidebar } from './components/layout/RightSidebar';
 import { FeedView } from './components/feed/FeedView';
-import { HousesView } from './components/houses/HousesView';
+import { ArenaAI } from './components/arena/ArenaAI';
 import { MarketplaceView } from './components/marketplace/MarketplaceView';
 import { EventsView } from './components/events/EventsView';
 import { ProfileView } from './components/profile/ProfileView';
@@ -34,7 +34,7 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 min-w-0 pb-16 md:pb-8">
           {activeTab === 'feed' && <FeedView />}
           {activeTab === 'reels' && <ReelsView />}
-          {activeTab === 'groups' && <HousesView />}
+          {activeTab === 'arena-ai' && <ArenaAI />}
           {activeTab === 'marketplace' && <MarketplaceView />}
           {activeTab === 'events' && <EventsView />}
           {activeTab === 'profile' && <ProfileView />}
