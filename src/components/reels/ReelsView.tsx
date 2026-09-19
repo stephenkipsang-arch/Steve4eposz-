@@ -27,6 +27,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { Reel } from '../../types';
+import { apiUrl } from '../../utils/api';
 
 export const ReelsView: React.FC = () => {
   const {
@@ -63,6 +64,7 @@ export const ReelsView: React.FC = () => {
   const filteredReels = reels;
 
   const currentReel: Reel | undefined = filteredReels[activeReelIndex] || filteredReels[0] || reels[0];
+  const playbackUrl = currentReel?.videoUrl?.startsWith('/') ? apiUrl(currentReel.videoUrl) : currentReel?.videoUrl;
 
   // Sync mute state directly to video DOM property
   useEffect(() => {
@@ -330,7 +332,7 @@ export const ReelsView: React.FC = () => {
                 <video
                   key={currentReel.id}
                   ref={videoRef}
-                  src={currentReel.videoUrl}
+                  src={playbackUrl}
                   poster={currentReel.posterUrl}
                   loop
                   playsInline
