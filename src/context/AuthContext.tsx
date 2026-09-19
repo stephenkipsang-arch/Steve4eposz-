@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: `user_${Date.now()}`,
       name: userName,
       email: cleanEmail,
-      avatar: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(userName)}&backgroundColor=0f172a&fontWeight=700`,
+      avatar: '/Steve4eposz-/mfa-default-avatar.jpg',
       coverImage: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80',
       role: 'Student - Grade 10',
       house: 'Kenya',
