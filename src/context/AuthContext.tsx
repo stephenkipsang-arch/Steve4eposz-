@@ -7,6 +7,7 @@ import { apiFetch } from '../utils/api';
 interface AuthContextType {
   currentUser: User;
   allAcademyUsers: User[];
+  isAuthenticated: boolean;
   loginWithAcademyEmail: (email: string, name?: string, house?: House, role?: UserRole) => { success: boolean; message: string };
   switchUser: (userId: string) => void;
   updateProfile: (updatedFields: Partial<User>) => void;
@@ -16,18 +17,22 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const LOCAL_STORAGE_USER_KEY = 'mfa_vexpex_current_user_v2';
-const LOCAL_STORAGE_ALL_USERS_KEY = 'mfa_vexpex_all_users_v2';
+const LOCAL_STORAGE_USER_KEY = 'mfa_vexpex_current_user_v3';
+const LOCAL_STORAGE_ALL_USERS_KEY = 'mfa_vexpex_all_users_v3';
+const LOCAL_STORAGE_AUTH_KEY = 'mfa_vexpex_authenticated_v1';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [allAcademyUsers, setAllAcademyUsers] = useState<User[]>(() => getStoredItem<User[]>(LOCAL_STORAGE_ALL_USERS_KEY, ACADEMY_USERS));
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => getStoredItem<boolean>(LOCAL_STORAGE_AUTH_KEY, false));
+  const [allAcademyUsers, setAllAcademyUsers] = useState<User[]>(() => getStoredItem<User[]>(LOCAL_STORAGE_ALL_USERS_KEY, []));
   const [currentUser, setCurrentUser] = useState<User>(() => getStoredItem<User>(LOCAL_STORAGE_USER_KEY, CURRENT_USER));
 
   useEffect(() => setStoredItem(LOCAL_STORAGE_USER_KEY, currentUser), [currentUser]);
   useEffect(() => setStoredItem(LOCAL_STORAGE_ALL_USERS_KEY, allAcademyUsers), [allAcademyUsers]);
+  useEffect(() => setStoredItem(LOCAL_STORAGE_AUTH_KEY, isAuthenticated), [isAuthenticated]);
 
   // Shared directory sync. The app keeps cached users if the backend is temporarily unavailable.
   useEffect(() => {
+    if (!isAuthenticated) return;
     let active = true;
     const syncUsers = async () => {
       try {
@@ -47,10 +52,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void syncUsers();
     const timer = window.setInterval(() => void syncUsers(), 5000);
     return () => { active = false; window.clearInterval(timer); };
-  }, []);
+  }, [isAuthenticated]);
 
   // Publish presence so other devices can see active students.
   useEffect(() => {
+    if (!isAuthenticated) return;
     const setPresence = (online: boolean) => {
       void apiFetch(`/api/users/${encodeURIComponent(currentUser.id)}/presence`, {
         method: 'PATCH',
@@ -78,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.removeEventListener('beforeunload', handleBeforeUnload);
       setPresence(false);
     };
-  }, [currentUser.id]);
+  }, [currentUser.id, isAuthenticated]);
 
   const isDomainValid = (email: string): boolean => email.trim().toLowerCase().endsWith('@mpesafoundationacademy.ac.ke');
 
@@ -96,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const existing = allAcademyUsers.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existing) {
       setCurrentUser(existing);
+      setIsAuthenticated(true);
       return { success: true, message: `Welcome back, ${existing.name}!` };
     }
 
@@ -120,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setAllAcademyUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
+    setIsAuthenticated(true);
     return { success: true, message: `Account created for ${userName}! Verified with M-PESA Foundation Academy.` };
   };
 
@@ -136,10 +144,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const logout = () => setCurrentUser(CURRENT_USER);
+  const logout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(CURRENT_USER);
+  };
 
   return (
-    <AuthContext.Provider value={{ currentUser, allAcademyUsers, loginWithAcademyEmail, switchUser, updateProfile, logout, isDomainValid, activeHouse: currentUser.house }}>
+    <AuthContext.Provider value={{ currentUser, allAcademyUsers, isAuthenticated, loginWithAcademyEmail, switchUser, updateProfile, logout, isDomainValid, activeHouse: currentUser.house }}>
       {children}
     </AuthContext.Provider>
   );
