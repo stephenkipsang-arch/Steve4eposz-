@@ -96,7 +96,6 @@ const ChatWindowBox: React.FC<ChatWindowBoxProps> = ({ user, minimized, onClose,
     const text = inputText.trim();
     if (!text || sending) return;
 
-    sendMessage(user.id, text);
     setInputText('');
     setSending(true);
 
@@ -106,7 +105,15 @@ const ChatWindowBox: React.FC<ChatWindowBoxProps> = ({ user, minimized, onClose,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senderId: currentUser.id, receiverId: user.id, text })
       });
-      if (response.ok) await loadChat();
+
+      if (response.ok) {
+        await loadChat();
+      } else {
+        sendMessage(user.id, text);
+      }
+    } catch {
+      // Keep the message visible locally if the shared backend is temporarily unavailable.
+      sendMessage(user.id, text);
     } finally {
       setSending(false);
     }
