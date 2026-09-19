@@ -246,9 +246,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [events, setEvents] = useState<CampusEvent[]>([]);
 
   // Messenger State
-  const [chatThreads, setChatThreads] = useState<ChatThread[]>([]);
+  const [chatThreads, setChatThreads] = useState<ChatThread[]>(() => {
+    return getStoredItem<ChatThread[]>('mfa_vexpex_chat_threads_v1', []);
+  });
   const [openChatWindows, setOpenChatWindows] = useState<OpenChatWindow[]>([]);
-  const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [messages, setMessages] = useState<Record<string, Message[]>>(() => {
+    return getStoredItem<Record<string, Message[]>>('mfa_vexpex_messages_v1', {});
+  });
 
   // Notifications State
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -283,6 +287,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     setStoredItem('mfa_vexpex_reels_v7', reels);
   }, [reels]);
+
+  // Persist Messenger conversations so messages survive page refreshes.
+  useEffect(() => {
+    setStoredItem('mfa_vexpex_messages_v1', messages);
+  }, [messages]);
+
+  useEffect(() => {
+    setStoredItem('mfa_vexpex_chat_threads_v1', chatThreads);
+  }, [chatThreads]);
 
   const viewUserProfile = (user: User) => {
     setSelectedProfileUser(user);
