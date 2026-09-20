@@ -49,7 +49,7 @@ function clearSession(res, token) {
 
 function getSessionUser(req, db) {
   const cookie = String(req.headers.cookie || '');
-  const match = cookie.match(/(?:^|;\s*)__Host-mfa_session=([^;]+)/g);
+  const match = cookie.match(/(?:^|;\s*)__Host-mfa_session=([^;]+)/);
   if (!match) return null;
   const session = sessions.get(match[1]);
   if (!session || session.expiresAt <= Date.now()) {
@@ -274,7 +274,7 @@ app.get('/api/auth/me', (req, res) => {
 
 app.post('/api/auth/logout', (req, res) => {
   const cookie = String(req.headers.cookie || '');
-  const match = cookie.match(/(?:^|;\s*)__Host-mfa_session=([^;]+)/g);
+  const match = cookie.match(/(?:^|;\s*)__Host-mfa_session=([^;]+)/);
   clearSession(res, match?.[1]);
   res.json({ ok: true });
 });
