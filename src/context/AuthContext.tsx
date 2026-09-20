@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { CURRENT_USER, ACADEMY_USERS } from '../data/mockData';
+import { CURRENT_USER } from '../data/mockData';
 import { getStoredItem, setStoredItem } from '../utils/safeStorage';
 import { apiFetch } from '../utils/api';
 
@@ -10,11 +10,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loginWithAcademyEmail: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   registerWithAcademyEmail: (email: string, password: string, name: string) => Promise<{ success: boolean; message: string }>;
-  switchUser: (userId: string) => void;
   updateProfile: (updatedFields: Partial<User>) => void;
   logout: () => void;
   isDomainValid: (email: string) => boolean;
-  
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,7 +35,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [allAcademyUsers, setAllAcademyUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User>(() => normalizeGrade10User(CURRENT_USER));
 
-  // Clean-start migration: remove every legacy client-side account/session/cache once.
   useEffect(() => {
     if (getStoredItem<boolean>(FRESH_START_KEY, false)) return;
     try {
@@ -57,8 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => setStoredItem(LOCAL_STORAGE_ALL_USERS_KEY, allAcademyUsers), [allAcademyUsers]);
   useEffect(() => setStoredItem(LOCAL_STORAGE_AUTH_KEY, isAuthenticated), [isAuthenticated]);
 
-  // Shared directory sync. GET is independent from profile publishing, so a failed write
-  // can never prevent friends from appearing in the directory.
   useEffect(() => {
     if (!isAuthenticated) return;
     let active = true;
@@ -78,8 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => { active = false; window.clearInterval(timer); };
   }, [isAuthenticated, currentUser.id]);
 
-  // Validate the server-side session on every app load. Local storage alone is never
-  // sufficient to authenticate an account.
   useEffect(() => {
     let active = true;
     const restoreSession = async () => {
@@ -107,7 +100,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => { active = false; };
   }, []);
 
-  // Publish presence only through the authenticated session.
   useEffect(() => {
     if (!isAuthenticated) return;
     const setPresence = (online: boolean) => {
@@ -133,18 +125,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isDomainValid = (email: string): boolean => email.trim().toLowerCase().endsWith('@mpesafoundationacademy.ac.ke');
 
-  const loginWithAcademyEmail = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; message: string }> => {
+  const loginWithAcademyEmail = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
     const cleanEmail = email.trim().toLowerCase();
-    if (!isDomainValid(cleanEmail)) {
-      return { success: false, message: 'Access denied: use your M-PESA Foundation Academy email address.' };
-    }
-    if (password.length < 12) {
-      return { success: false, message: 'Password must be at least 12 characters.' };
-    }
-
+    if (!isDomainValid(cleanEmail)) return { success: false, message: 'Access denied: use your M-PESA Foundation Academy email address.' };
+    if (password.length < 12) return { success: false, message: 'Password must be at least 12 characters.' };
     try {
       const response = await apiFetch('/api/auth/login', {
         method: 'POST',
@@ -152,10 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email: cleanEmail, password })
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data?.user) {
-        return { success: false, message: data?.error || 'Invalid Academy email or password.' };
-      }
-
+      if (!response.ok || !data?.user) return { success: false, message: data?.error || 'Invalid Academy email or password.' };
       const canonicalUser = normalizeGrade10User(data.user);
       setCurrentUser(canonicalUser);
       setAllAcademyUsers((prev) => {
@@ -170,23 +151,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const registerWithAcademyEmail = async (
-    email: string,
-    password: string,
-    name: string
-  ): Promise<{ success: boolean; message: string }> => {
+  const registerWithAcademyEmail = async (email: string, password: string, name: string): Promise<{ success: boolean; message: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
-    if (!isDomainValid(cleanEmail)) {
-      return { success: false, message: 'Access denied: use your M-PESA Foundation Academy email address.' };
-    }
-    if (!cleanName) {
-      return { success: false, message: 'Full name is required when creating an account.' };
-    }
-    if (password.length < 12) {
-      return { success: false, message: 'Password must be at least 12 characters.' };
-    }
-
+    if (!isDomainValid(cleanEmail)) return { success: false, message: 'Access denied: use your M-PESA Foundation Academy email address.' };
+    if (!cleanName) return { success: false, message: 'Full name is required when creating an account.' };
+    if (password.length < 12) return { success: false, message: 'Password must be at least 12 characters.' };
     try {
       const newUser: User = normalizeGrade10User({
         id: `user_${Date.now()}`,
@@ -198,7 +168,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         bio: 'Grade 10 learner | M-PESA Foundation Academy', location: 'Thika Campus, Kenya',
         isVerifiedAcademy: true, friendsCount: 0, joinedDate: 'August 2026', clubs: []
       });
-
       const response = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -206,12 +175,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data?.user) {
-        if (response.status === 409) {
-          return { success: false, message: 'An account already exists for this Academy email. Please use Sign In.' };
-        }
+        if (response.status === 409) return { success: false, message: 'An account already exists for this Academy email. Please use Sign In.' };
         return { success: false, message: data?.error || 'Could not create the Academy account.' };
       }
-
       const canonicalUser = normalizeGrade10User(data.user);
       setCurrentUser(canonicalUser);
       setAllAcademyUsers((prev) => [...prev.filter((u) => u.email.toLowerCase() !== cleanEmail), canonicalUser]);
@@ -220,11 +186,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       return { success: false, message: 'Could not reach the MFA-VEXPEX account server. Please try again.' };
     }
-  };
-
-  const switchUser = (userId: string) => {
-    const found = allAcademyUsers.find((u) => u.id === userId);
-    if (found) setCurrentUser(found);
   };
 
   const updateProfile = (updatedFields: Partial<User>) => {
@@ -247,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, allAcademyUsers, isAuthenticated, loginWithAcademyEmail, registerWithAcademyEmail, switchUser, updateProfile, logout, isDomainValid }}>
+    <AuthContext.Provider value={{ currentUser, allAcademyUsers, isAuthenticated, loginWithAcademyEmail, registerWithAcademyEmail, updateProfile, logout, isDomainValid }}>
       {children}
     </AuthContext.Provider>
   );
