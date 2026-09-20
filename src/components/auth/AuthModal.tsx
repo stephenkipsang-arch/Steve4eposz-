@@ -20,6 +20,8 @@ export const AuthModal: React.FC = () => {
   const [emailInput, setEmailInput] = useState('');
   const [nameInput, setNameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [showRecoveryHelp, setShowRecoveryHelp] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -30,6 +32,12 @@ export const AuthModal: React.FC = () => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
+    setShowRecoveryHelp(false);
+
+    if (mode === 'signup' && passwordInput !== confirmPasswordInput) {
+      setErrorMessage('Passwords do not match. Please enter the same password twice.');
+      return;
+    }
 
     const submit = mode === 'signup'
       ? registerWithAcademyEmail(emailInput, passwordInput, nameInput)
@@ -153,7 +161,7 @@ export const AuthModal: React.FC = () => {
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 minLength={12}
-                autoComplete="current-password"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 className="w-full bg-[#F0F2F5] text-xs px-3 py-2.5 rounded-xl border border-[#CED0D4] focus:bg-white focus:border-[#1877F2] focus:outline-hidden"
                 required
               />
@@ -161,6 +169,42 @@ export const AuthModal: React.FC = () => {
                 Use a unique password you do not share with other people.
               </span>
             </div>
+
+            {mode === 'signup' && (
+              <div>
+                <label className="block font-semibold text-[#050505] mb-1">Confirm Password *</label>
+                <input
+                  type="password"
+                  placeholder="Enter the password again"
+                  value={confirmPasswordInput}
+                  onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                  minLength={12}
+                  autoComplete="new-password"
+                  className="w-full bg-[#F0F2F5] text-xs px-3 py-2.5 rounded-xl border border-[#CED0D4] focus:bg-white focus:border-[#1877F2] focus:outline-hidden"
+                  required
+                />
+                <span className="text-[10px] text-[#65676B] mt-1 block">
+                  Both password fields must match before the account can be created.
+                </span>
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRecoveryHelp((value) => !value)}
+                  className="text-[#1877F2] font-semibold hover:underline"
+                >
+                  Forgot password?
+                </button>
+                {showRecoveryHelp && (
+                  <div className="p-3 rounded-xl bg-[#FFF7ED] border border-[#FED7AA] text-[11px] text-[#9A3412] leading-relaxed">
+                    Password recovery is not completed automatically yet. If you forgot your MFA-VEXPEX password, contact your Academy administrator/teacher responsible for the app so the account can be securely reset. Never send your password to anyone.
+                  </div>
+                )}
+              </div>
+            )}
 
             {mode === 'signup' && (
               <div>
