@@ -852,22 +852,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const threadId = `chat_${peerId.replace('user_', '')}`;
           grouped[threadId] = [...(grouped[threadId] || []), message];
 
-          if (!chatThreads.some((thread) => String(thread.user.id) === peerId)) {
-            const peer = usersById.get(peerId);
-            if (peer) {
-              setChatThreads((prev) =>
-                prev.some((thread) => String(thread.user.id) === peerId)
-                  ? prev
-                  : [...prev, {
-                      id: threadId,
-                      user: peer,
-                      lastMessage: message.text || 'Media',
-                      lastTimestamp: new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      unreadCount: String(message.receiverId) === String(currentUser.id) && !message.read ? 1 : 0,
-                      isOnline: Boolean(peer.online)
-                    } as ChatThread]
-              );
-            }
+          const peer = usersById.get(peerId);
+          if (peer) {
+            setChatThreads((prev) =>
+              prev.some((thread) => String(thread.user.id) === peerId)
+                ? prev.map((thread) =>
+                    String(thread.user.id) === peerId
+                      ? {
+                          ...thread,
+                          lastMessage: message.text || 'Media',
+                          lastTimestamp: new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                          unreadCount: String(message.receiverId) === String(currentUser.id) && !message.read
+                            ? Math.max(1, thread.unreadCount)
+                            : thread.unreadCount,
+                          isOnline: Boolean(peer.online)
+                        }
+                      : thread
+                  )
+                : [...prev, {
+                    id: threadId,
+                    user: peer,
+                    lastMessage: message.text || 'Media',
+                    lastTimestamp: new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    unreadCount: String(message.receiverId) === String(currentUser.id) && !message.read ? 1 : 0,
+                    isOnline: Boolean(peer.online)
+                  } as ChatThread]
+            );
           }
         }
 
