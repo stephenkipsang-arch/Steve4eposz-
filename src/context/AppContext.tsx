@@ -654,6 +654,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setReels((prev) => [newReel, ...prev]);
     setActiveReelIndex(0);
+    void apiFetch('/api/reels', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newReel, createdAt: new Date().toISOString() })
+    }).catch((error) => console.warn('Could not sync Reel:', error));
   };
 
   const likeReel = (reelId: string) => {
@@ -711,6 +716,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
   };
+
+  // Shared Reel sync: every authenticated device reads the same Cloudinary-backed Reel list.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    const syncReels = async () => {
+      try {
+        const response = await apiFetch('/api/reels');
+        if (!response.ok) return;
+        const data = await response.json();
+        const serverReels = normalizeStoredReels(data?.reels);
+        if (cancelled) return;
+        setReels((prev) => {
+          const serverIds = new Set(serverReels.map((reel) => reel.id));
+          const localOnly = prev.filter((reel) => !serverIds.has(reel.id) && !reel.videoUrl.startsWith('blob:'));
+          return [...localOnly, ...serverReels];
+        });
+      } catch (error) {
+        console.warn('Shared Reel sync unavailable:', error);
+      }
+    };
+    void syncReels();
+    const interval = window.setInterval(() => void syncReels(), 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [isAuthenticated, currentUser.id]);
 
   // Messenger Handlers
   const openChatWithUser = (user: User) => {
