@@ -189,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const newUser: User = normalizeGrade10User({
-        id: \`user_\${Date.now()}\`,
+        id: `user_${Date.now()}`,
         name: cleanName,
         email: cleanEmail,
         avatar: '/Steve4eposz-/mfa-default-avatar.jpg',
@@ -216,7 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(canonicalUser);
       setAllAcademyUsers((prev) => [...prev.filter((u) => u.email.toLowerCase() !== cleanEmail), canonicalUser]);
       setIsAuthenticated(true);
-      return { success: true, message: \`Account created for \${canonicalUser.name}.\` };
+      return { success: true, message: `Account created for ${canonicalUser.name}.` };
     } catch {
       return { success: false, message: 'Could not reach the MFA-VEXPEX account server. Please try again.' };
     }
