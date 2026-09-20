@@ -109,11 +109,11 @@ const ChatWindowBox: React.FC<ChatWindowBoxProps> = ({ user, minimized, onClose,
       if (response.ok) {
         await loadChat();
       } else {
-        sendMessage(user.id, text);
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || `Message failed (${response.status})`);
       }
-    } catch {
-      // Keep the message visible locally if the shared backend is temporarily unavailable.
-      sendMessage(user.id, text);
+    } catch (error) {
+      console.warn('Message could not be sent to the shared server:', error);
     } finally {
       setSending(false);
     }
