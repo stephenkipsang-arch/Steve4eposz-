@@ -49,7 +49,7 @@ function clearSession(res, token) {
 
 function getSessionUser(req, db) {
   const cookie = String(req.headers.cookie || '');
-  const match = cookie.match(/(?:^|;\\s*)__Host-mfa_session=([^;]+)/);
+  const match = cookie.match(/(?:^|;\s*)__Host-mfa_session=([^;]+)/g);
   if (!match) return null;
   const session = sessions.get(match[1]);
   if (!session || session.expiresAt <= Date.now()) {
@@ -156,7 +156,7 @@ app.post('/api/reels/upload', express.raw({ type: ['video/*', 'application/octet
 app.use(express.json({ limit: '1mb' }));
 
 function freshDb() {
-  return { version: DB_VERSION, users: [], messages: [], lostFound: [], posts: [] };
+  return { version: DB_VERSION, users: [], messages: [], lostFound: [], posts: [], reels: [] };
 }
 
 function loadDb() {
@@ -173,7 +173,8 @@ function loadDb() {
       users: Array.isArray(db.users) ? db.users : [],
       messages: Array.isArray(db.messages) ? db.messages : [],
       lostFound: Array.isArray(db.lostFound) ? db.lostFound : [],
-      posts: Array.isArray(db.posts) ? db.posts : []
+      posts: Array.isArray(db.posts) ? db.posts : [],
+      reels: Array.isArray(db.reels) ? db.reels : []
     };
   } catch {
     return freshDb();
@@ -183,7 +184,7 @@ function loadDb() {
 function saveDb(db) {
   fs.writeFileSync(
     DB_FILE,
-    JSON.stringify({ version: DB_VERSION, users: db.users || [], messages: db.messages || [], lostFound: db.lostFound || [], posts: db.posts || [] }, null, 2)
+    JSON.stringify({ version: DB_VERSION, users: db.users || [], messages: db.messages || [], lostFound: db.lostFound || [], posts: db.posts || [], reels: db.reels || [] }, null, 2)
   );
 }
 
@@ -273,7 +274,7 @@ app.get('/api/auth/me', (req, res) => {
 
 app.post('/api/auth/logout', (req, res) => {
   const cookie = String(req.headers.cookie || '');
-  const match = cookie.match(/(?:^|;\\s*)__Host-mfa_session=([^;]+)/);
+  const match = cookie.match(/(?:^|;\s*)__Host-mfa_session=([^;]+)/g);
   clearSession(res, match?.[1]);
   res.json({ ok: true });
 });
@@ -394,6 +395,33 @@ app.patch('/api/lost-found/:itemId', (req, res) => {
   db.lostFound[index] = { ...db.lostFound[index], resolved: Boolean(req.body?.resolved) };
   saveDb(db);
   res.json({ item: db.lostFound[index] });
+});
+
+app.get('/api/reels', (req, res) => {
+  const db = loadDb();
+  const current = requireAuth(req, res, db);
+  if (!current) return;
+  res.json({ reels: [...(db.reels || [])].sort((a, b) => {
+    const at = Date.parse(String(a.createdAt || a.timestamp || '')) || 0;
+    const bt = Date.parse(String(b.createdAt || b.timestamp || '')) || 0;
+    return bt - at;
+  }) });
+});
+
+app.post('/api/reels', (req, res) => {
+  const db = loadDb();
+  const current = requireAuth(req, res, db);
+  if (!current) return;
+  const reel = req.body || {};
+  if (String(reel.author?.id) !== String(current.id)) return res.status(403).json({ error: 'Author does not match the authenticated account.' });
+  if (!reel.id || !reel.videoUrl) return res.status(400).json({ error: 'id and videoUrl are required' });
+  db.reels = Array.isArray(db.reels) ? db.reels : [];
+  const cleanReel = { ...reel, createdAt: reel.createdAt || new Date().toISOString() };
+  const existing = db.reels.findIndex((item) => String(item.id) === String(reel.id));
+  if (existing >= 0) db.reels[existing] = cleanReel;
+  else db.reels.push(cleanReel);
+  saveDb(db);
+  res.status(existing >= 0 ? 200 : 201).json({ reel: cleanReel });
 });
 
 app.get('/api/messages/inbox', (req, res) => {
