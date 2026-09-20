@@ -164,7 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return Array.from(map.values());
       });
       setIsAuthenticated(true);
-      return { success: true, message: \`Welcome back, \${canonicalUser.name}!\` };
+      return { success: true, message: `Welcome back, ${canonicalUser.name}!` };
     } catch {
       return { success: false, message: 'Could not reach the MFA-VEXPEX account server. Please try again.' };
     }
